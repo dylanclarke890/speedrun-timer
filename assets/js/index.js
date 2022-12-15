@@ -1,10 +1,32 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const timer = document.getElementById("timer");
+class TimerEvent {
+  static create = (type, detail) =>
+    new CustomEvent(type, {
+      detail,
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    });
+}
 
-  let currentTime = 0;
-  let last = performance.now();
+class Timer {
+  constructor() {
+    this.lastRead = 0;
+    this.current = 0;
+    this.html = "";
+  }
 
-  function msToTime(s) {
+  start() {
+    this.interval = setInterval(() => this.#updateLoop(), 100);
+  }
+
+  pause() {
+    clearInterval(this.interval);
+    this.#updateLoop();
+  }
+
+  clear() {}
+
+  msToTime(s) {
     const ms = s % 1000;
     s = (s - ms) / 1000;
     const secs = s % 60;
@@ -15,17 +37,25 @@ document.addEventListener("DOMContentLoaded", () => {
     return hrs + ":" + mins + ":" + secs + "." + ms;
   }
 
-  function getTimeElapsed() {
-    const current = performance.now();
-    const elapsed = current - last;
-    last = current;
+  timeElapsedSinceLastReading(updateLastRead = true) {
+    const now = performance.now();
+    const elapsed = now - this.lastRead;
+    if (updateLastRead) this.lastRead = now;
     return elapsed;
   }
 
-  setInterval(() => {
-    const elapsed = getTimeElapsed();
-    currentTime += elapsed;
-    console.log(elapsed);
-    timer.innerHTML = msToTime(Math.round(currentTime));
-  }, 100);
+  #updateLoop() {
+    this.current += this.timeElapsedSinceLastReading();
+    this.html = this.msToTime(Math.round(this.current));
+    document.dispatchEvent(TimerEvent.create("updated", { html: this.html }));
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const timer = new Timer();
+  const timerResult = document.getElementById("timer");
+  document.addEventListener("updated", (e) => {
+    timerResult.innerHTML = e.detail.html;
+  });
+  timer.start();
 });
