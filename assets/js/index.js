@@ -9,14 +9,25 @@ class TimerEvent {
 }
 
 class Timer {
+  static STATUSES = {
+    INIT: 0,
+    RUNNING: 1,
+    PAUSED: 2,
+  };
+
   constructor() {
     this.lastRead = 0;
     this.current = 0;
     this.html = "";
+    this.status = Timer.STATUSES.INIT;
   }
 
+  isInStatus = (status) => this.status === Timer.STATUSES[status];
+
   start() {
-    this.interval = setInterval(() => this.#updateLoop(), 100);
+    if (this.isInStatus("INIT") || this.isInStatus("PAUSED")) {
+      this.interval = setInterval(() => this.#updateLoop(), 100);
+    }
   }
 
   pause() {
@@ -47,15 +58,24 @@ class Timer {
   #updateLoop() {
     this.current += this.timeElapsedSinceLastReading();
     this.html = this.msToTime(Math.round(this.current));
-    document.dispatchEvent(TimerEvent.create("updated", { html: this.html }));
+    document.dispatchEvent(
+      TimerEvent.create("timechanged", { html: this.html, status: this.status })
+    );
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   const timer = new Timer();
   const timerResult = document.getElementById("timer");
-  document.addEventListener("updated", (e) => {
+  document.addEventListener("timechanged", (e) => {
     timerResult.innerHTML = e.detail.html;
   });
-  timer.start();
+  const start = document.getElementById("timerStart");
+  const pause = document.getElementById("timerPause");
+  start.addEventListener("click", () => {
+    timer.start();
+  });
+  pause.addEventListener("click", () => {
+    timer.pause();
+  });
 });
