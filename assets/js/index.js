@@ -26,6 +26,7 @@ class Timer {
 
   start() {
     if (this.isInStatus("INIT") || this.isInStatus("PAUSED")) {
+      this.lastRead = performance.now();
       this.interval = setInterval(() => this.#updateLoop(), 100);
     }
   }
