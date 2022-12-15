@@ -1,42 +1,83 @@
-class TimerEvent {
-  static create = (type, detail) =>
+class TimerEventDispatcher {
+  constructor(receiver) {
+    this.receiver = receiver ?? document;
+  }
+
+  #evt = (type, detail) =>
     new CustomEvent(type, {
       detail,
       bubbles: true,
       cancelable: true,
       composed: true,
     });
+
+  #dispatch = (evt) => this.receiver.dispatchEvent(evt);
+
+  timeChanged = (html) => this.#dispatch(this.#evt("timechanged", { html }));
+  statusChanged = (status) => this.#dispatch(this.#evt("statuschanged", { status }));
 }
 
 class Timer {
   static STATUSES = {
-    INIT: 0,
-    RUNNING: 1,
-    PAUSED: 2,
+    INITIALISED: 1,
+    RUNNING: 2,
+    PAUSED: 3,
   };
 
   constructor() {
     this.lastRead = 0;
     this.current = 0;
-    this.html = "";
-    this.status = Timer.STATUSES.INIT;
+    this.dispatcher = new TimerEventDispatcher();
+
+    this.setStatus("INITIALISED");
   }
 
-  isInStatus = (status) => this.status === Timer.STATUSES[status];
+  // #region STATUS
+
+  setStatus(status) {
+    this.status = Timer.STATUSES[status];
+    this.dispatcher.statusChanged(this.status);
+  }
+
+  isInStatus(status) {
+    return this.status === Timer.STATUSES[status];
+  }
+
+  // #endregion STATUS
+
+  // #region TIMER
+
+  #updateLoop() {
+    this.current += this.timeElapsedSinceLastReading();
+    this.dispatcher.timeChanged(this.msToTime(Math.round(this.current)));
+  }
 
   start() {
-    if (this.isInStatus("INIT") || this.isInStatus("PAUSED")) {
+    if (this.isInStatus("INITIALISED") || this.isInStatus("PAUSED")) {
       this.lastRead = performance.now();
       this.interval = setInterval(() => this.#updateLoop(), 100);
+      this.setStatus("RUNNING");
     }
   }
 
   pause() {
     clearInterval(this.interval);
+    this.setStatus("PAUSED");
     this.#updateLoop();
   }
 
   clear() {}
+
+  // #endregion TIMER
+
+  // #region HELPERS
+
+  timeElapsedSinceLastReading(updateLastRead = true) {
+    const now = performance.now();
+    const elapsed = now - this.lastRead;
+    if (updateLastRead) this.lastRead = now;
+    return elapsed;
+  }
 
   prefixWithZeroes = (num) => (num < 10 ? `0${num}` : num);
 
@@ -52,20 +93,7 @@ class Timer {
     return (hrs ? fmt(hrs) + ":" : "") + fmt(mins) + ":" + fmt(secs) + "." + ms;
   }
 
-  timeElapsedSinceLastReading(updateLastRead = true) {
-    const now = performance.now();
-    const elapsed = now - this.lastRead;
-    if (updateLastRead) this.lastRead = now;
-    return elapsed;
-  }
-
-  #updateLoop() {
-    this.current += this.timeElapsedSinceLastReading();
-    this.html = this.msToTime(Math.round(this.current));
-    document.dispatchEvent(
-      TimerEvent.create("timechanged", { html: this.html, status: this.status })
-    );
-  }
+  // #endregion HELPERS
 }
 
 document.addEventListener("DOMContentLoaded", () => {
