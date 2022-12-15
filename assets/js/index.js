@@ -38,6 +38,8 @@ class Timer {
 
   clear() {}
 
+  prefixWithZeroes = (num) => (num < 10 ? `0${num}` : num);
+
   msToTime(s) {
     const ms = s % 1000;
     s = (s - ms) / 1000;
@@ -46,7 +48,8 @@ class Timer {
     const mins = s % 60;
     const hrs = (s - mins) / 60;
 
-    return hrs + ":" + mins + ":" + secs + "." + ms;
+    const fmt = this.prefixWithZeroes;
+    return (hrs ? fmt(hrs) + ":" : "") + fmt(mins) + ":" + fmt(secs) + "." + ms;
   }
 
   timeElapsedSinceLastReading(updateLastRead = true) {
