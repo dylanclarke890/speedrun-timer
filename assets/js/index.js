@@ -1,4 +1,4 @@
-class StringFormatting {
+class Formatting {
   static prefixWithZeroes = (num) => (num < 10 ? `0${num}` : num);
 
   static msToShortTimeString(s) {
@@ -9,7 +9,7 @@ class StringFormatting {
     const mins = s % 60;
     const hrs = (s - mins) / 60;
 
-    const fmt = StringFormatting.prefixWithZeroes;
+    const fmt = Formatting.prefixWithZeroes;
     return (hrs ? fmt(hrs) + ":" : "") + fmt(mins) + ":" + fmt(secs) + "." + ms;
   }
 }
@@ -188,7 +188,11 @@ UI.onPageReady(() => {
   // #endregion USER INPUT
 
   // #region TIMER EVENTS
-  UI.addEvent(document, "timechanged", (e) => (timerResult.innerHTML = e.detail.time));
+  UI.addEvent(
+    document,
+    "timechanged",
+    (e) => (timerResult.innerHTML = Formatting.msToShortTimeString(Math.round(e.detail.time)))
+  );
   UI.addEvent(document, "statuschanged", (e) => {
     const { INITIALISED, RUNNING, PAUSED } = SpeedrunTimer.STATUSES;
     switch (e.detail.status) {
@@ -218,8 +222,8 @@ UI.onPageReady(() => {
     const { id, current, best } = e.detail.segment;
     const element = document.querySelector(`[data-id="${id}"]`);
     element.innerHTML = `
-      <p>Best: ${best}</p>
-      <p>Current: ${current}</p>`;
+      <p>Best: ${Formatting.msToShortTimeString(Math.round(best))}</p>
+      <p>Current: ${Formatting.msToShortTimeString(Math.round(current))}</p>`;
   });
   // #endregion TIMER EVENTS
 });
