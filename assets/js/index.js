@@ -17,6 +17,15 @@ class TimerEventDispatcher {
   statusChanged = (status) => this.#dispatch("statuschanged", { status });
 }
 
+class Segment {
+  constructor({ name, pbSplit, pbSegment, bestSegment } = {}) {
+    this.name = name;
+    this.pbSplit = pbSplit;
+    this.pbSegment = pbSegment;
+    this.bestSegment = bestSegment;
+  }
+}
+
 class Timer {
   static STATUSES = {
     INITIALISED: 1,
