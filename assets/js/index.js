@@ -130,15 +130,7 @@ class SpeedrunTimer {
   // #endregion HELPERS
 }
 
-function hide(element) {
-  element.style.display = "none";
-}
-
-function show(element) {
-  element.style.removeProperty("display");
-}
-
-document.addEventListener("DOMContentLoaded", () => {
+UI.onPageReady(() => {
   const timer = new SpeedrunTimer();
   const timerResult = document.getElementById("timer");
   const start = document.getElementById("timerStart");
@@ -172,38 +164,32 @@ document.addEventListener("DOMContentLoaded", () => {
   // #endregion USER INPUT
 
   // #region TIMER EVENTS
-  document.addEventListener("timechanged", (e) => {
-    timerResult.innerHTML = e.detail.time;
-  });
-
-  document.addEventListener("statuschanged", (e) => {
+  UI.addEvent("timechanged", (e) => (timerResult.innerHTML = e.detail.time));
+  UI.addEvent("timechanged", (e) => {
     const { INITIALISED, RUNNING, PAUSED } = SpeedrunTimer.STATUSES;
     switch (e.detail.status) {
       case INITIALISED:
-        show(start);
-        hide(pause);
-        hide(split);
-        hide(clear);
+        UI.show(start);
+        UI.hide(pause);
+        UI.hide(split);
+        UI.hide(clear);
         break;
       case RUNNING:
-        hide(start);
-        show(pause);
-        show(split);
-        hide(clear);
+        UI.hide(start);
+        UI.show(pause);
+        UI.show(split);
+        UI.hide(clear);
         break;
       case PAUSED:
-        show(start);
-        hide(pause);
-        hide(split);
-        show(clear);
+        UI.show(start);
+        UI.hide(pause);
+        UI.hide(split);
+        UI.show(clear);
         break;
       default:
         break;
     }
   });
-
-  document.addEventListener("segmentadded", (e) => {
-    segments.innerHTML += `<div></div>`;
-  });
+  UI.addEvent("segmentadded", (e) => (segments.innerHTML += `<div></div>`));
   // #endregion TIMER EVENTS
 });
