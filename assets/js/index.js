@@ -47,6 +47,7 @@ class SpeedrunTimer {
     INITIALISED: 1,
     RUNNING: 2,
     PAUSED: 3,
+    FINISHED: 4,
   };
 
   constructor({ segments } = {}) {
@@ -94,8 +95,8 @@ class SpeedrunTimer {
   pause() {
     if (!this.isInStatus("RUNNING")) return;
     clearInterval(this.interval);
-    this.setStatus("PAUSED");
     this.#syncTimer();
+    this.setStatus("PAUSED");
   }
 
   clear() {
@@ -109,7 +110,14 @@ class SpeedrunTimer {
   split() {
     if (!this.isInStatus("RUNNING")) return;
     this.#syncTimer();
-    if (++this.activeSegment >= this.segments.length) this.pause();
+    if (++this.activeSegment >= this.segments.length) this.finish();
+  }
+
+  finish() {
+    if (this.isInStatus("INITIALISED")) return;
+    clearInterval(this.interval);
+    this.#syncTimer();
+    this.setStatus("FINISHED");
   }
 
   // #endregion TIMER
