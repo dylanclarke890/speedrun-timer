@@ -49,6 +49,10 @@ class Timer {
 
   #updateLoop() {
     this.current += this.timeElapsedSinceLastReading();
+    this.#timeChanged();
+  }
+
+  #timeChanged() {
     this.dispatcher.timeChanged(this.msToTime(Math.round(this.current)));
   }
 
@@ -68,8 +72,10 @@ class Timer {
   }
 
   clear() {
+    if (!this.isInStatus("PAUSED")) return;
     this.lastRead = 0;
     this.current = 0;
+    this.#timeChanged();
     this.setStatus("INITIALISED");
   }
 
@@ -101,18 +107,54 @@ class Timer {
   // #endregion HELPERS
 }
 
+function hide(element) {
+  element.style.display = "none";
+}
+
+function show(element) {
+  element.style.removeProperty("display");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const timer = new Timer();
   const timerResult = document.getElementById("timer");
-  document.addEventListener("timechanged", (e) => {
-    timerResult.innerHTML = e.detail.time;
-  });
   const start = document.getElementById("timerStart");
   const pause = document.getElementById("timerPause");
+  const clear = document.getElementById("timerClear");
+
   start.addEventListener("click", () => {
     timer.start();
   });
   pause.addEventListener("click", () => {
     timer.pause();
+  });
+  clear.addEventListener("click", () => {
+    timer.clear();
+  });
+
+  document.addEventListener("timechanged", (e) => {
+    timerResult.innerHTML = e.detail.time;
+  });
+  document.addEventListener("statuschanged", (e) => {
+    const { INITIALISED, RUNNING, PAUSED } = Timer.STATUSES;
+    switch (e.detail.status) {
+      case INITIALISED:
+        show(start);
+        hide(pause);
+        hide(clear);
+        break;
+      case RUNNING:
+        hide(start);
+        show(pause);
+        hide(clear);
+        break;
+      case PAUSED:
+        hide(pause);
+        show(start);
+        show(clear);
+        break;
+      default:
+        break;
+    }
   });
 });
