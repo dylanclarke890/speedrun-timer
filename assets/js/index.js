@@ -37,7 +37,7 @@ class Timer {
     this.lastRead = 0;
     this.current = 0;
     this.dispatcher = new TimerEventDispatcher();
-
+    this.splits = [];
     this.setStatus("INITIALISED");
   }
 
@@ -88,6 +88,13 @@ class Timer {
     this.setStatus("INITIALISED");
   }
 
+  split() {
+    if (!this.isInStatus("RUNNING")) return;
+    this.current += this.timeElapsedSinceLastReading();
+    this.splits.push(this.msToTime(Math.round(this.current)));
+    this.#timeChanged();
+  }
+
   // #endregion TIMER
 
   // #region HELPERS
@@ -130,6 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const start = document.getElementById("timerStart");
   const pause = document.getElementById("timerPause");
   const clear = document.getElementById("timerClear");
+  const split = document.getElementById("timerSplit");
 
   // #region USER INPUT
   start.addEventListener("click", () => {
@@ -144,10 +152,17 @@ document.addEventListener("DOMContentLoaded", () => {
     timer.clear();
   });
 
+  split.addEventListener("click", () => {
+    timer.split();
+  });
+
   document.addEventListener("keyup", (e) => {
     switch (e.code) {
-      case "Space":
+      case "Enter":
         timer.start();
+        break;
+      case "Space":
+        timer.split();
         break;
       case "KeyP":
         timer.pause();
@@ -170,16 +185,19 @@ document.addEventListener("DOMContentLoaded", () => {
       case INITIALISED:
         show(start);
         hide(pause);
+        hide(split);
         hide(clear);
         break;
       case RUNNING:
         hide(start);
         show(pause);
+        show(split);
         hide(clear);
         break;
       case PAUSED:
-        hide(pause);
         show(start);
+        hide(pause);
+        hide(split);
         show(clear);
         break;
       default:
