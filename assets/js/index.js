@@ -61,6 +61,7 @@ class Timer {
   }
 
   pause() {
+    if (!this.isInStatus("RUNNING")) return;
     clearInterval(this.interval);
     this.setStatus("PAUSED");
     this.#updateLoop();
