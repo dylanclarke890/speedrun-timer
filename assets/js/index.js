@@ -109,6 +109,7 @@ class SpeedrunTimer {
   split() {
     if (!this.isInStatus("RUNNING")) return;
     this.#syncTimer();
+    if (++this.activeSegment >= this.segments.length) this.pause();
   }
 
   // #endregion TIMER
@@ -139,12 +140,13 @@ UI.onPageReady(() => {
   const split = document.getElementById("timerSplit");
   const segments = document.getElementById("segments");
 
+  const fmt = (val) => Formatting.msToShortTimeString(Math.round(val));
   initialSegments.forEach(
     (v) =>
       (segments.innerHTML += `
     <div data-id="${v.id}">
-      <p>Best: ${v.best}</p>
-      <p>Current: ${v.current}</p>
+      <p>Best: ${fmt(v.best)}</p>
+      <p>Current: ${fmt(v.current)}</p>
     </div>
   `)
   );
@@ -174,11 +176,7 @@ UI.onPageReady(() => {
   // #endregion USER INPUT
 
   // #region TIMER EVENTS
-  UI.addEvent(
-    document,
-    "timechanged",
-    (e) => (timerResult.innerHTML = Formatting.msToShortTimeString(Math.round(e.detail.time)))
-  );
+  UI.addEvent(document, "timechanged", (e) => (timerResult.innerHTML = fmt(e.detail.time)));
   UI.addEvent(document, "statuschanged", (e) => {
     const { INITIALISED, RUNNING, PAUSED } = SpeedrunTimer.STATUSES;
     switch (e.detail.status) {
@@ -208,8 +206,8 @@ UI.onPageReady(() => {
     const { id, current, best } = e.detail.segment;
     const element = document.querySelector(`[data-id="${id}"]`);
     element.innerHTML = `
-      <p>Best: ${Formatting.msToShortTimeString(Math.round(best))}</p>
-      <p>Current: ${Formatting.msToShortTimeString(Math.round(current))}</p>`;
+      <p>Best: ${fmt(best)}</p>
+      <p>Current: ${fmt(current)}</p>`;
   });
   // #endregion TIMER EVENTS
 });
