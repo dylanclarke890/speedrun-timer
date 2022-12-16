@@ -18,18 +18,10 @@ class TimerEventDispatcher {
 }
 
 class Segment {
-  constructor({ name, pbSplit, pbSegment, bestSegment } = {}) {
-    this.name = name;
-    this.pbSplit = pbSplit;
-    this.pbSegment = pbSegment;
-    this.bestSegment = bestSegment;
-  }
-}
-
-class SegmentList {
-  constructor({ segments }) {
-    this.segments = segments;
+  constructor({ best } = {}) {
+    this.id = UI.uniqueId();
     this.current = 0;
+    this.best = best ?? 0;
   }
 }
 
@@ -40,11 +32,12 @@ class SpeedrunTimer {
     PAUSED: 3,
   };
 
-  constructor() {
+  constructor({ segments } = {}) {
     this.lastRead = 0;
     this.current = 0;
     this.dispatcher = new TimerEventDispatcher();
-    this.splits = [];
+    this.segments = segments ?? [];
+    this.activeSegment = -1;
     this.setStatus("INITIALISED");
   }
 
@@ -73,11 +66,14 @@ class SpeedrunTimer {
   }
 
   start() {
-    if (this.isInStatus("INITIALISED") || this.isInStatus("PAUSED")) {
-      this.lastRead = performance.now();
-      this.interval = setInterval(() => this.#updateLoop(), 100);
-      this.setStatus("RUNNING");
+    console.log(this.status);
+    if (!this.isInStatus("INITIALISED") && !this.isInStatus("PAUSED")) return;
+    if (this.isInStatus("INITIALISED")) {
+      this.activeSegment = 0;
     }
+    this.lastRead = performance.now();
+    this.interval = setInterval(() => this.#updateLoop(), 100);
+    this.setStatus("RUNNING");
   }
 
   pause() {
@@ -98,7 +94,7 @@ class SpeedrunTimer {
   split() {
     if (!this.isInStatus("RUNNING")) return;
     this.current += this.timeElapsedSinceLastReading();
-    this.splits.push(this.msToTime(Math.round(this.current)));
+    this.segments.push(this.msToTime(Math.round(this.current)));
     this.#timeChanged();
   }
 
@@ -131,7 +127,8 @@ class SpeedrunTimer {
 }
 
 UI.onPageReady(() => {
-  const timer = new SpeedrunTimer();
+  const initialSegments = [new Segment({ best: 0 }), new Segment({ best: 10000 })];
+  const timer = new SpeedrunTimer({ segments: initialSegments });
   const timerResult = document.getElementById("timer");
   const start = document.getElementById("timerStart");
   const pause = document.getElementById("timerPause");
@@ -139,13 +136,23 @@ UI.onPageReady(() => {
   const split = document.getElementById("timerSplit");
   const segments = document.getElementById("segments");
 
-  // #region USER INPUT
-  start.addEventListener("click", () => timer.start());
-  pause.addEventListener("click", () => timer.pause());
-  clear.addEventListener("click", () => timer.clear());
-  split.addEventListener("click", () => timer.split());
+  initialSegments.forEach(
+    (v) =>
+      (segments.innerHTML += `
+    <div data-id="${v.id}">
+      <p>Best: ${v.best}</p>
+      <p>Current: ${v.current}</p>
+    </div>
+  `)
+  );
 
-  document.addEventListener("keyup", (e) => {
+  // #region USER INPUT
+  UI.addEvent(start, "click", () => timer.start());
+  UI.addEvent(pause, "click", () => timer.pause());
+  UI.addEvent(clear, "click", () => timer.clear());
+  UI.addEvent(split, "click", () => timer.split());
+
+  UI.addEvent(document, "keyup", (e) => {
     switch (e.code) {
       case "Enter":
         timer.start();
@@ -164,8 +171,8 @@ UI.onPageReady(() => {
   // #endregion USER INPUT
 
   // #region TIMER EVENTS
-  UI.addEvent("timechanged", (e) => (timerResult.innerHTML = e.detail.time));
-  UI.addEvent("timechanged", (e) => {
+  UI.addEvent(document, "timechanged", (e) => (timerResult.innerHTML = e.detail.time));
+  UI.addEvent(document, "statuschanged", (e) => {
     const { INITIALISED, RUNNING, PAUSED } = SpeedrunTimer.STATUSES;
     switch (e.detail.status) {
       case INITIALISED:
@@ -190,6 +197,12 @@ UI.onPageReady(() => {
         break;
     }
   });
-  UI.addEvent("segmentadded", (e) => (segments.innerHTML += `<div></div>`));
+  UI.addEvent(document, "segmentupdated", (e) => {
+    const { id, current, best } = e.detail.segment;
+    const element = document.querySelector(`[data-id="${id}"]`);
+    element.innerHTML = `
+      <p>Best: ${best}</p>
+      <p>Current: ${current}</p>`;
+  });
   // #endregion TIMER EVENTS
 });
