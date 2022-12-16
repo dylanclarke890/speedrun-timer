@@ -122,19 +122,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const pause = document.getElementById("timerPause");
   const clear = document.getElementById("timerClear");
 
+  // #region USER INPUT
   start.addEventListener("click", () => {
     timer.start();
   });
+
   pause.addEventListener("click", () => {
     timer.pause();
   });
+
   clear.addEventListener("click", () => {
     timer.clear();
   });
 
+  document.addEventListener("keyup", (e) => {
+    console.log(e.code);
+    switch (e.code) {
+      case "Space":
+        timer.start();
+        break;
+      case "KeyP":
+        timer.pause();
+        break;
+      case "Escape":
+        timer.clear();
+        break;
+    }
+  });
+  // #endregion USER INPUT
+
+  // #region TIMER EVENTS
   document.addEventListener("timechanged", (e) => {
     timerResult.innerHTML = e.detail.time;
   });
+
   document.addEventListener("statuschanged", (e) => {
     const { INITIALISED, RUNNING, PAUSED } = Timer.STATUSES;
     switch (e.detail.status) {
@@ -157,4 +178,5 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
     }
   });
+  // #endregion TIMER EVENTS
 });
