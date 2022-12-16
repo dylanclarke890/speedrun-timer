@@ -136,7 +136,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("keyup", (e) => {
-    console.log(e.code);
     switch (e.code) {
       case "Space":
         timer.start();
