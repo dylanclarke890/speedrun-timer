@@ -26,6 +26,13 @@ class Segment {
   }
 }
 
+class SegmentList {
+  constructor({ segments }) {
+    this.segments = segments;
+    this.current = 0;
+  }
+}
+
 class SpeedrunTimer {
   static STATUSES = {
     INITIALISED: 1,
@@ -138,23 +145,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const pause = document.getElementById("timerPause");
   const clear = document.getElementById("timerClear");
   const split = document.getElementById("timerSplit");
+  const segments = document.getElementById("segments");
 
   // #region USER INPUT
-  start.addEventListener("click", () => {
-    timer.start();
-  });
-
-  pause.addEventListener("click", () => {
-    timer.pause();
-  });
-
-  clear.addEventListener("click", () => {
-    timer.clear();
-  });
-
-  split.addEventListener("click", () => {
-    timer.split();
-  });
+  start.addEventListener("click", () => timer.start());
+  pause.addEventListener("click", () => timer.pause());
+  clear.addEventListener("click", () => timer.clear());
+  split.addEventListener("click", () => timer.split());
 
   document.addEventListener("keyup", (e) => {
     switch (e.code) {
@@ -203,6 +200,10 @@ document.addEventListener("DOMContentLoaded", () => {
       default:
         break;
     }
+  });
+
+  document.addEventListener("segmentadded", (e) => {
+    segments.innerHTML += `<div></div>`;
   });
   // #endregion TIMER EVENTS
 });
