@@ -3,18 +3,18 @@ class TimerEventDispatcher {
     this.receiver = receiver ?? document;
   }
 
-  #evt = (type, detail) =>
-    new CustomEvent(type, {
-      detail,
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-    });
+  #dispatch = (type, detail) =>
+    this.receiver.dispatchEvent(
+      new CustomEvent(type, {
+        detail,
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+      })
+    );
 
-  #dispatch = (evt) => this.receiver.dispatchEvent(evt);
-
-  timeChanged = (html) => this.#dispatch(this.#evt("timechanged", { html }));
-  statusChanged = (status) => this.#dispatch(this.#evt("statuschanged", { status }));
+  timeChanged = (time) => this.#dispatch("timechanged", { time });
+  statusChanged = (status) => this.#dispatch("statuschanged", { status });
 }
 
 class Timer {
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const timer = new Timer();
   const timerResult = document.getElementById("timer");
   document.addEventListener("timechanged", (e) => {
-    timerResult.innerHTML = e.detail.html;
+    timerResult.innerHTML = e.detail.time;
   });
   const start = document.getElementById("timerStart");
   const pause = document.getElementById("timerPause");
