@@ -1,3 +1,19 @@
+class StringFormatting {
+  static prefixWithZeroes = (num) => (num < 10 ? `0${num}` : num);
+
+  static msToShortTimeString(s) {
+    const ms = s % 1000;
+    s = (s - ms) / 1000;
+    const secs = s % 60;
+    s = (s - secs) / 60;
+    const mins = s % 60;
+    const hrs = (s - mins) / 60;
+
+    const fmt = StringFormatting.prefixWithZeroes;
+    return (hrs ? fmt(hrs) + ":" : "") + fmt(mins) + ":" + fmt(secs) + "." + ms;
+  }
+}
+
 class TimerEventDispatcher {
   constructor(receiver) {
     this.receiver = receiver ?? document;
@@ -15,6 +31,7 @@ class TimerEventDispatcher {
 
   timeChanged = (time) => this.#dispatch("timechanged", { time });
   statusChanged = (status) => this.#dispatch("statuschanged", { status });
+  segmentChanged = (segment) => this.#dispatch("segmentchanged", { segment });
 }
 
 class Segment {
@@ -56,23 +73,21 @@ class SpeedrunTimer {
 
   // #region TIMER
 
-  #updateLoop() {
-    this.current += this.timeElapsedSinceLastReading();
+  #syncTimer() {
+    const timeElapsed = this.timeElapsedSinceLastReading();
+    this.current += timeElapsed;
     this.#timeChanged();
-  }
-
-  #timeChanged() {
-    this.dispatcher.timeChanged(this.msToTime(Math.round(this.current)));
+    const currentSegment = this.segments[this.activeSegment];
+    currentSegment.current += timeElapsed;
+    this.dispatcher.segmentChanged(currentSegment);
   }
 
   start() {
-    console.log(this.status);
     if (!this.isInStatus("INITIALISED") && !this.isInStatus("PAUSED")) return;
-    if (this.isInStatus("INITIALISED")) {
-      this.activeSegment = 0;
-    }
+    if (this.isInStatus("INITIALISED")) this.activeSegment = 0;
+
     this.lastRead = performance.now();
-    this.interval = setInterval(() => this.#updateLoop(), 100);
+    this.interval = setInterval(() => this.#syncTimer(), 100);
     this.setStatus("RUNNING");
   }
 
@@ -80,7 +95,7 @@ class SpeedrunTimer {
     if (!this.isInStatus("RUNNING")) return;
     clearInterval(this.interval);
     this.setStatus("PAUSED");
-    this.#updateLoop();
+    this.#syncTimer();
   }
 
   clear() {
@@ -93,14 +108,16 @@ class SpeedrunTimer {
 
   split() {
     if (!this.isInStatus("RUNNING")) return;
-    this.current += this.timeElapsedSinceLastReading();
-    this.segments.push(this.msToTime(Math.round(this.current)));
-    this.#timeChanged();
+    this.#syncTimer();
   }
 
   // #endregion TIMER
 
   // #region HELPERS
+
+  #timeChanged() {
+    this.dispatcher.timeChanged(this.current);
+  }
 
   timeElapsedSinceLastReading(updateLastRead = true) {
     const now = performance.now();
@@ -197,7 +214,7 @@ UI.onPageReady(() => {
         break;
     }
   });
-  UI.addEvent(document, "segmentupdated", (e) => {
+  UI.addEvent(document, "segmentchanged", (e) => {
     const { id, current, best } = e.detail.segment;
     const element = document.querySelector(`[data-id="${id}"]`);
     element.innerHTML = `
