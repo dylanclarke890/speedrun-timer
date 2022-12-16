@@ -26,7 +26,7 @@ class Segment {
   }
 }
 
-class Timer {
+class SpeedrunTimer {
   static STATUSES = {
     INITIALISED: 1,
     RUNNING: 2,
@@ -44,12 +44,12 @@ class Timer {
   // #region STATUS
 
   setStatus(status) {
-    this.status = Timer.STATUSES[status];
+    this.status = SpeedrunTimer.STATUSES[status];
     this.dispatcher.statusChanged(this.status);
   }
 
   isInStatus(status) {
-    return this.status === Timer.STATUSES[status];
+    return this.status === SpeedrunTimer.STATUSES[status];
   }
 
   // #endregion STATUS
@@ -132,7 +132,7 @@ function show(element) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const timer = new Timer();
+  const timer = new SpeedrunTimer();
   const timerResult = document.getElementById("timer");
   const start = document.getElementById("timerStart");
   const pause = document.getElementById("timerPause");
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("statuschanged", (e) => {
-    const { INITIALISED, RUNNING, PAUSED } = Timer.STATUSES;
+    const { INITIALISED, RUNNING, PAUSED } = SpeedrunTimer.STATUSES;
     switch (e.detail.status) {
       case INITIALISED:
         show(start);
