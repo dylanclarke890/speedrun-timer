@@ -66,7 +66,11 @@ class Timer {
     this.#updateLoop();
   }
 
-  clear() {}
+  clear() {
+    this.lastRead = 0;
+    this.current = 0;
+    this.setStatus("INITIALISED");
+  }
 
   // #endregion TIMER
 
