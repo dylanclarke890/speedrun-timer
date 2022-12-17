@@ -36,6 +36,7 @@ class TimerEventDispatcher {
   onTimeChanged = (time) => this.#dispatch("timechanged", { time });
   onStatusChanged = (status) => this.#dispatch("statuschanged", { status });
   onSplit = (segment) => this.#dispatch("split", { segment });
+  onSegmentCleared = (segment) => this.#dispatch("segmentcleared", { segment });
 }
 
 class Segment {
@@ -49,6 +50,44 @@ class Segment {
   }
 }
 
+class Run {
+  constructor({ segments, dispatcher } = {}) {
+    this.segments = segments;
+    this.activeSegmentIndex = -1;
+    this.currentSegmentTime = 0;
+    this.dispatcher = dispatcher ?? new TimerEventDispatcher();
+  }
+
+  start() {
+    this.activeSegmentIndex = 0;
+  }
+
+  syncActiveSegment(timeElapsed) {
+    this.currentSegmentTime += timeElapsed;
+  }
+
+  hasNextSegment = () => this.activeSegmentIndex < this.segments.length;
+
+  split(totalTimeElapsed) {
+    const active = this.segments[this.activeSegmentIndex];
+    active.segmentTotal = this.currentSegmentTime;
+    active.totalSoFar = totalTimeElapsed;
+    this.currentSegmentTime = 0;
+    this.activeSegmentIndex++;
+    this.dispatcher.onSplit(active);
+  }
+
+  reset() {
+    this.segments.forEach((s) => {
+      s.segmentTotal = 0;
+      s.totalSoFar = 0;
+      this.dispatcher.onSegmentCleared(s);
+    });
+  }
+
+  saveBest() {}
+}
+
 class SpeedrunTimer {
   static STATUSES = {
     INITIALISED: 1,
@@ -57,13 +96,11 @@ class SpeedrunTimer {
     FINISHED: 4,
   };
 
-  constructor({ segments } = {}) {
+  constructor({ run, dispatcher } = {}) {
+    this.run = run;
+    this.dispatcher = dispatcher ?? new TimerEventDispatcher();
     this.lastRead = 0;
     this.totalTimeElapsed = 0;
-    this.dispatcher = new TimerEventDispatcher();
-    this.segments = segments ?? [];
-    this.currentSegment = 0;
-    this.activeSegment = -1;
     this.setStatus("INITIALISED");
   }
 
@@ -85,14 +122,13 @@ class SpeedrunTimer {
   #syncTimer() {
     const timeElapsedSinceLastRead = this.timeElapsedSinceLastReading();
     this.totalTimeElapsed += timeElapsedSinceLastRead;
-    this.currentSegment += timeElapsedSinceLastRead;
+    this.run.syncActiveSegment(timeElapsedSinceLastRead);
     this.#timeChanged();
   }
 
   start() {
     if (!this.isInStatus("INITIALISED") && !this.isInStatus("PAUSED")) return;
-    if (this.isInStatus("INITIALISED")) this.activeSegment = 0;
-
+    if (this.isInStatus("INITIALISED")) this.run.start();
     this.lastRead = performance.now();
     this.interval = setInterval(() => this.#syncTimer(), 100);
     this.setStatus("RUNNING");
@@ -105,31 +141,20 @@ class SpeedrunTimer {
     this.setStatus("PAUSED");
   }
 
-  clear() {
+  reset() {
     if (!this.isInStatus("PAUSED") && !this.isInStatus("FINISHED")) return;
     this.lastRead = 0;
     this.totalTimeElapsed = 0;
-    this.currentSegment = 0;
     this.#timeChanged();
+    this.run.reset();
     this.setStatus("INITIALISED");
-    this.segments.forEach((s) => {
-      s.current = 0;
-      this.dispatcher.onSplit(s);
-    });
   }
 
   split() {
     if (!this.isInStatus("RUNNING")) return;
     this.#syncTimer();
-    const active = this.segments[this.activeSegment];
-    active.segmentTotal = this.currentSegment;
-    this.currentSegment = 0;
-    active.totalSoFar = this.totalTimeElapsed;
-    this.dispatcher.onSplit(active);
-    if (++this.activeSegment >= this.segments.length) {
-      this.activeSegment--;
-      this.finish();
-    }
+    this.run.split(this.totalTimeElapsed);
+    if (!this.run.hasNextSegment()) this.finish();
   }
 
   finish() {
@@ -137,6 +162,12 @@ class SpeedrunTimer {
     clearInterval(this.interval);
     this.#syncTimer();
     this.setStatus("FINISHED");
+  }
+
+  saveBest() {
+    if (!this.isInStatus("FINISHED")) return;
+    this.run.saveBest();
+    this.reset();
   }
 
   // #endregion TIMER
@@ -157,6 +188,7 @@ class SpeedrunTimer {
   // #endregion HELPERS
 }
 
+// #region OnPageLoad
 UI.onPageReady(() => {
   const resEvilSplits = [
     new Segment({
@@ -175,18 +207,21 @@ UI.onPageReady(() => {
       best: 0,
     }),
   ];
+  const resEvilRun = new Run({ segments: resEvilSplits });
+  const timer = new SpeedrunTimer({ run: resEvilRun });
 
   const fmt = (val, prefixSign = false) =>
     Formatting.msToShortTimeString(Math.round(val), prefixSign);
-  const timer = new SpeedrunTimer({ segments: resEvilSplits });
   const timerResult = document.getElementById("timer");
   timerResult.innerHTML = fmt(0);
   const start = document.getElementById("timerStart");
   const pause = document.getElementById("timerPause");
-  const clear = document.getElementById("timerClear");
+  const reset = document.getElementById("timerClear");
   const split = document.getElementById("timerSplit");
+  const save = document.getElementById("timerSave");
   const segments = document.getElementById("segments");
 
+  // TODO: move styles into css file
   resEvilSplits.forEach(
     (v, i) =>
       (segments.innerHTML += `
@@ -203,10 +238,13 @@ UI.onPageReady(() => {
   // #region USER INPUT
   UI.addEvent(start, "click", () => timer.start());
   UI.addEvent(pause, "click", () => timer.pause());
-  UI.addEvent(clear, "click", () => timer.clear());
+  UI.addEvent(reset, "click", () => timer.reset());
   UI.addEvent(split, "click", () => timer.split());
+  UI.addEvent(save, "click", () => timer.saveBest());
 
   UI.addEvent(document, "keyup", (e) => {
+    // TODO: Have the keyboard call the timer events themselves or should they share a "UI"
+    // function along with the click events that calls the timer methods?
     switch (e.code) {
       case "Enter":
         timer.start();
@@ -218,8 +256,10 @@ UI.onPageReady(() => {
         timer.pause();
         break;
       case "Escape":
-        timer.clear();
+        timer.reset();
         break;
+      case "S":
+        timer.saveBest();
     }
   });
   // #endregion USER INPUT
@@ -233,41 +273,65 @@ UI.onPageReady(() => {
         UI.show(start);
         UI.hide(pause);
         UI.hide(split);
-        UI.hide(clear);
+        UI.hide(reset);
+        UI.hide(save);
         break;
       case RUNNING:
         UI.hide(start);
         UI.show(pause);
         UI.show(split);
-        UI.hide(clear);
+        UI.hide(reset);
+        UI.hide(save);
         break;
       case PAUSED:
         UI.show(start);
         UI.hide(pause);
         UI.hide(split);
-        UI.show(clear);
+        UI.show(reset);
+        UI.hide(save);
         break;
       case FINISHED:
         UI.hide(start);
         UI.hide(pause);
         UI.hide(split);
-        UI.show(clear);
+        UI.show(reset);
+        UI.show(save);
         break;
       default:
         break;
     }
   });
-  UI.addEvent(document, "split", (e) => {
-    const { id, best, segmentTotal, totalSoFar } = e.detail.segment;
-    const color = segmentTotal > best ? "red" : segmentTotal < best ? "green" : "black";
-    const diff = best > 0 ? fmt(segmentTotal - best, true) : "";
 
+  function updateSegment(segment, type) {
+    const { id, best, segmentTotal, totalSoFar } = segment;
     const segmentEl = document.querySelector(`[data-id="${id}"]`);
     const currentOrBestEl = segmentEl.querySelector(".segment-current-or-best");
     const totalEl = segmentEl.querySelector(".segment-total");
-    totalEl.classList.add(color);
-    totalEl.textContent = diff;
+
+    switch (type) {
+      case "reset":
+        totalEl.textContent = "";
+        break;
+      case "split":
+        const color = segmentTotal > best ? "red" : segmentTotal < best ? "green" : "black";
+        const diff = best > 0 ? fmt(segmentTotal - best, true) : "";
+        totalEl.classList.add(color);
+        totalEl.textContent = diff;
+        break;
+      default:
+        break;
+    }
+
     currentOrBestEl.textContent = `${fmt(totalSoFar)}`;
+  }
+
+  UI.addEvent(document, "segmentcleared", (e) => {
+    updateSegment(e.detail.segment, "reset");
+  });
+
+  UI.addEvent(document, "split", (e) => {
+    updateSegment(e.detail.segment, "split");
   });
   // #endregion TIMER EVENTS
 });
+// #endregion OnPageLoad
