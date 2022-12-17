@@ -105,6 +105,10 @@ class SpeedrunTimer {
     this.current = 0;
     this.#timeChanged();
     this.setStatus("INITIALISED");
+    this.segments.forEach((s) => {
+      s.current = 0;
+      this.dispatcher.segmentChanged(s);
+    });
   }
 
   split() {
@@ -142,6 +146,11 @@ class SpeedrunTimer {
 }
 
 UI.onPageReady(() => {
+  const resEvilSplit = [
+    {
+      name: "Free Mia Cutscene",
+    },
+  ];
   const initialSegments = [new Segment({ best: 0 }), new Segment({ best: 10000 })];
   const timer = new SpeedrunTimer({ segments: initialSegments });
   const timerResult = document.getElementById("timer");
