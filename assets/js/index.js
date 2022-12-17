@@ -190,7 +190,9 @@ UI.onPageReady(() => {
   resEvilSplits.forEach(
     (v, i) =>
       (segments.innerHTML += `
-    <div style="display:flex; justify-content:space-evenly;" data-id="${v.id}">
+    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; text-align: center;" data-id="${
+      v.id
+    }">
       <p class="segment-name">${v.name ?? i}</p> 
       <p class="segment-total"></p> 
       <p class="segment-current-or-best">${fmt(v.best)}</p>
@@ -257,14 +259,15 @@ UI.onPageReady(() => {
   });
   UI.addEvent(document, "split", (e) => {
     const { id, best, segmentTotal, totalSoFar } = e.detail.segment;
-    const color = segmentTotal > best ? "green" : segmentTotal < best ? "red" : "black";
-    const segment = document.querySelector(`[data-id="${id}"]`);
-    const target = segment.querySelector(".segment-current-or-best");
-    const segmentTotalElement = segment.querySelector(".segment-total");
-    segmentTotalElement.classList.add(color);
-    const diff = fmt(segmentTotal - best, true);
-    segmentTotalElement.textContent = diff;
-    target.textContent = `${fmt(totalSoFar)}`;
+    const color = segmentTotal > best ? "red" : segmentTotal < best ? "green" : "black";
+    const diff = best > 0 ? fmt(segmentTotal - best, true) : "";
+
+    const segmentEl = document.querySelector(`[data-id="${id}"]`);
+    const currentOrBestEl = segmentEl.querySelector(".segment-current-or-best");
+    const totalEl = segmentEl.querySelector(".segment-total");
+    totalEl.classList.add(color);
+    totalEl.textContent = diff;
+    currentOrBestEl.textContent = `${fmt(totalSoFar)}`;
   });
   // #endregion TIMER EVENTS
 });

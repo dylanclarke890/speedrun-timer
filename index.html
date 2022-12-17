@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="assets/css/index.css" />
     <title>Speedrun Timer</title>
+    <style>
+      .red {
+        color:red;
+      }
+      .green {
+        color: green;
+      }
+    </style>
   </head>
   <body>
     <div id="segments"></div>
@@ -15,8 +23,9 @@
       <div>
         <button id="timerStart" type="button">Start</button>
         <button id="timerPause" type="button" style="display: none">Pause</button>
-        <button id="timerClear" type="button" style="display: none">Clear</button>
         <button id="timerSplit" type="button" style="display: none">Split</button>
+        <button id="timerSave" type="button" style="display: none">Save Best</button>
+        <button id="timerClear" type="button" style="display: none">Reset</button>
       </div>
     </div>
     <script src="assets/js/ui.js"></script>
