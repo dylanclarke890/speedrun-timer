@@ -100,7 +100,7 @@ class SpeedrunTimer {
   }
 
   clear() {
-    if (!this.isInStatus("PAUSED")) return;
+    if (!this.isInStatus("PAUSED") && !this.isInStatus("FINISHED")) return;
     this.lastRead = 0;
     this.current = 0;
     this.#timeChanged();
@@ -110,7 +110,10 @@ class SpeedrunTimer {
   split() {
     if (!this.isInStatus("RUNNING")) return;
     this.#syncTimer();
-    if (++this.activeSegment >= this.segments.length) this.finish();
+    if (++this.activeSegment >= this.segments.length) {
+      this.activeSegment--;
+      this.finish();
+    }
   }
 
   finish() {
@@ -186,7 +189,7 @@ UI.onPageReady(() => {
   // #region TIMER EVENTS
   UI.addEvent(document, "timechanged", (e) => (timerResult.innerHTML = fmt(e.detail.time)));
   UI.addEvent(document, "statuschanged", (e) => {
-    const { INITIALISED, RUNNING, PAUSED } = SpeedrunTimer.STATUSES;
+    const { INITIALISED, RUNNING, PAUSED, FINISHED } = SpeedrunTimer.STATUSES;
     switch (e.detail.status) {
       case INITIALISED:
         UI.show(start);
@@ -202,6 +205,12 @@ UI.onPageReady(() => {
         break;
       case PAUSED:
         UI.show(start);
+        UI.hide(pause);
+        UI.hide(split);
+        UI.show(clear);
+        break;
+      case FINISHED:
+        UI.hide(start);
         UI.hide(pause);
         UI.hide(split);
         UI.show(clear);
