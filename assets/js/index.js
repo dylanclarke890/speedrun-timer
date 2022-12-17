@@ -1,7 +1,10 @@
 class Formatting {
   static prefixWithZeroes = (num) => (num < 10 ? `0${num}` : num);
 
-  static msToShortTimeString(s) {
+  static msToShortTimeString(s, prefixSign = false) {
+    if (!s) return "--:--:--";
+    const isNegative = s < 0;
+    s = Math.abs(s);
     const ms = s % 1000;
     s = (s - ms) / 1000;
     const secs = s % 60;
@@ -10,7 +13,8 @@ class Formatting {
     const hrs = (s - mins) / 60;
 
     const fmt = Formatting.prefixWithZeroes;
-    return (hrs ? fmt(hrs) + ":" : "") + fmt(mins) + ":" + fmt(secs) + "." + ms;
+    const timeString = (hrs ? fmt(hrs) + ":" : "") + fmt(mins) + ":" + fmt(secs) + "." + ms;
+    return `${prefixSign ? (isNegative ? "-" : "+") : ""}${timeString}`;
   }
 }
 
@@ -29,16 +33,19 @@ class TimerEventDispatcher {
       })
     );
 
-  timeChanged = (time) => this.#dispatch("timechanged", { time });
-  statusChanged = (status) => this.#dispatch("statuschanged", { status });
-  segmentChanged = (segment) => this.#dispatch("segmentchanged", { segment });
+  onTimeChanged = (time) => this.#dispatch("timechanged", { time });
+  onStatusChanged = (status) => this.#dispatch("statuschanged", { status });
+  onSplit = (segment) => this.#dispatch("split", { segment });
 }
 
 class Segment {
-  constructor({ best } = {}) {
+  constructor({ name, duringPb, best } = {}) {
     this.id = UI.uniqueId();
-    this.current = 0;
+    this.name = name;
+    this.duringPb = duringPb ?? 0;
     this.best = best ?? 0;
+    this.segmentTotal = 0;
+    this.totalSoFar = 0;
   }
 }
 
@@ -52,9 +59,10 @@ class SpeedrunTimer {
 
   constructor({ segments } = {}) {
     this.lastRead = 0;
-    this.current = 0;
+    this.totalTimeElapsed = 0;
     this.dispatcher = new TimerEventDispatcher();
     this.segments = segments ?? [];
+    this.currentSegment = 0;
     this.activeSegment = -1;
     this.setStatus("INITIALISED");
   }
@@ -63,7 +71,7 @@ class SpeedrunTimer {
 
   setStatus(status) {
     this.status = SpeedrunTimer.STATUSES[status];
-    this.dispatcher.statusChanged(this.status);
+    this.dispatcher.onStatusChanged(this.status);
   }
 
   isInStatus(status) {
@@ -75,12 +83,10 @@ class SpeedrunTimer {
   // #region TIMER
 
   #syncTimer() {
-    const timeElapsed = this.timeElapsedSinceLastReading();
-    this.current += timeElapsed;
+    const timeElapsedSinceLastRead = this.timeElapsedSinceLastReading();
+    this.totalTimeElapsed += timeElapsedSinceLastRead;
+    this.currentSegment += timeElapsedSinceLastRead;
     this.#timeChanged();
-    const currentSegment = this.segments[this.activeSegment];
-    currentSegment.current += timeElapsed;
-    this.dispatcher.segmentChanged(currentSegment);
   }
 
   start() {
@@ -102,18 +108,24 @@ class SpeedrunTimer {
   clear() {
     if (!this.isInStatus("PAUSED") && !this.isInStatus("FINISHED")) return;
     this.lastRead = 0;
-    this.current = 0;
+    this.totalTimeElapsed = 0;
+    this.currentSegment = 0;
     this.#timeChanged();
     this.setStatus("INITIALISED");
     this.segments.forEach((s) => {
       s.current = 0;
-      this.dispatcher.segmentChanged(s);
+      this.dispatcher.onSplit(s);
     });
   }
 
   split() {
     if (!this.isInStatus("RUNNING")) return;
     this.#syncTimer();
+    const active = this.segments[this.activeSegment];
+    active.segmentTotal = this.currentSegment;
+    this.currentSegment = 0;
+    active.totalSoFar = this.totalTimeElapsed;
+    this.dispatcher.onSplit(active);
     if (++this.activeSegment >= this.segments.length) {
       this.activeSegment--;
       this.finish();
@@ -132,7 +144,7 @@ class SpeedrunTimer {
   // #region HELPERS
 
   #timeChanged() {
-    this.dispatcher.timeChanged(this.current);
+    this.dispatcher.onTimeChanged(this.totalTimeElapsed);
   }
 
   timeElapsedSinceLastReading(updateLastRead = true) {
@@ -146,27 +158,42 @@ class SpeedrunTimer {
 }
 
 UI.onPageReady(() => {
-  const resEvilSplit = [
-    {
+  const resEvilSplits = [
+    new Segment({
       name: "Free Mia Cutscene",
-    },
+      duringPb: 100023,
+      best: 120535,
+    }),
+    new Segment({
+      name: "Welcome to the family son",
+      duringPb: 100023,
+      best: 120535,
+    }),
+    new Segment({
+      name: "Watch this *blows face off*",
+      duringPb: 0,
+      best: 0,
+    }),
   ];
-  const initialSegments = [new Segment({ best: 0 }), new Segment({ best: 10000 })];
-  const timer = new SpeedrunTimer({ segments: initialSegments });
+
+  const fmt = (val, prefixSign = false) =>
+    Formatting.msToShortTimeString(Math.round(val), prefixSign);
+  const timer = new SpeedrunTimer({ segments: resEvilSplits });
   const timerResult = document.getElementById("timer");
+  timerResult.innerHTML = fmt(0);
   const start = document.getElementById("timerStart");
   const pause = document.getElementById("timerPause");
   const clear = document.getElementById("timerClear");
   const split = document.getElementById("timerSplit");
   const segments = document.getElementById("segments");
 
-  const fmt = (val) => Formatting.msToShortTimeString(Math.round(val));
-  initialSegments.forEach(
-    (v) =>
+  resEvilSplits.forEach(
+    (v, i) =>
       (segments.innerHTML += `
-    <div data-id="${v.id}">
-      <p>Best: ${fmt(v.best)}</p>
-      <p>Current: ${fmt(v.current)}</p>
+    <div style="display:flex; justify-content:space-evenly;" data-id="${v.id}">
+      <p class="segment-name">${v.name ?? i}</p> 
+      <p class="segment-total"></p> 
+      <p class="segment-current-or-best">${fmt(v.best)}</p>
     </div>
   `)
   );
@@ -228,12 +255,16 @@ UI.onPageReady(() => {
         break;
     }
   });
-  UI.addEvent(document, "segmentchanged", (e) => {
-    const { id, current, best } = e.detail.segment;
-    const element = document.querySelector(`[data-id="${id}"]`);
-    element.innerHTML = `
-      <p>Best: ${fmt(best)}</p>
-      <p>Current: ${fmt(current)}</p>`;
+  UI.addEvent(document, "split", (e) => {
+    const { id, best, segmentTotal, totalSoFar } = e.detail.segment;
+    const color = segmentTotal > best ? "green" : segmentTotal < best ? "red" : "black";
+    const segment = document.querySelector(`[data-id="${id}"]`);
+    const target = segment.querySelector(".segment-current-or-best");
+    const segmentTotalElement = segment.querySelector(".segment-total");
+    segmentTotalElement.classList.add(color);
+    const diff = fmt(segmentTotal - best, true);
+    segmentTotalElement.textContent = diff;
+    target.textContent = `${fmt(totalSoFar)}`;
   });
   // #endregion TIMER EVENTS
 });
