@@ -116,9 +116,7 @@ class SpeedrunTimer {
     this.dispatcher.onStatusChanged(this.status);
   }
 
-  isInStatus(status) {
-    return this.status === SpeedrunTimer.STATUSES[status];
-  }
+  isInStatus = (status) => this.status === SpeedrunTimer.STATUSES[status];
 
   // #endregion STATUS
 
