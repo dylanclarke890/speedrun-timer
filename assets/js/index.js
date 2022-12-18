@@ -85,7 +85,12 @@ class Run {
     });
   }
 
-  saveBest() {}
+  saveBest() {
+    this.segments.forEach((s) => {
+      if (!s.best || s.timeElapsed < s.best) s.best = s.timeElapsed;
+    });
+    this.reset();
+  }
 }
 
 class SpeedrunTimer {
@@ -230,7 +235,8 @@ UI.onPageReady(() => {
     }">
       <p class="segment-name">${v.name ?? i}</p> 
       <p class="segment-total"></p> 
-      <p class="segment-current-or-best">${fmt(v.best)}</p>
+      <p class="segment-current" style="display:none;"></p>
+      <p class="segment-best">${fmt(v.best)}</p>
     </div>
   `)
   );
@@ -305,20 +311,27 @@ UI.onPageReady(() => {
   function updateSegment(segment, type) {
     const { id, best, timeElapsed, accumulativeTimeElapsed } = segment;
     const segmentEl = document.querySelector(`[data-id="${id}"]`);
-    const currentOrBestEl = segmentEl.querySelector(".segment-current-or-best");
+    const currentEl = segmentEl.querySelector(".segment-current");
+    const bestEl = segmentEl.querySelector(".segment-best");
     const totalEl = segmentEl.querySelector(".segment-total");
 
     switch (type) {
       case "reset":
         totalEl.textContent = "";
-        currentOrBestEl.textContent = `${fmt(best)}`;
+        currentEl.textContent = "";
+        UI.hide(currentEl);
+        bestEl.textContent = `${fmt(best)}`;
+        UI.show(bestEl);
         break;
       case "split":
         const color = timeElapsed > best ? "red" : timeElapsed < best ? "green" : "black";
         const diff = best > 0 ? fmt(timeElapsed - best, true) : "";
         totalEl.classList.add(color);
         totalEl.textContent = diff;
-        currentOrBestEl.textContent = `${fmt(accumulativeTimeElapsed)}`;
+        bestEl.textContent = ``;
+        UI.hide(bestEl);
+        currentEl.textContent = `${fmt(accumulativeTimeElapsed)}`;
+        UI.show(currentEl);
         break;
       default:
         break;
