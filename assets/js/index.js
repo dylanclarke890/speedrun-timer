@@ -35,8 +35,9 @@ class TimerEventDispatcher {
 
   onTimeChanged = (time) => this.#dispatch("timechanged", { time });
   onStatusChanged = (status) => this.#dispatch("statuschanged", { status });
-  onSplit = (segment) => this.#dispatch("split", { segment });
-  onSegmentCleared = (segment) => this.#dispatch("segmentcleared", { segment });
+  onSplit = (segment, currentRunTotal) => this.#dispatch("split", { segment, currentRunTotal });
+  onSegmentCleared = (segment, accumulativeBestTotal) =>
+    this.#dispatch("segmentcleared", { segment, accumulativeBestTotal });
 }
 
 class Segment {
@@ -46,7 +47,6 @@ class Segment {
     this.duringPb = duringPb ?? 0;
     this.best = best ?? 0;
     this.timeElapsed = 0;
-    this.accumulativeTimeElapsed = 0;
   }
 }
 
@@ -68,20 +68,20 @@ class Run {
 
   hasNextSegment = () => this.activeSegmentIndex < this.segments.length;
 
-  split(totalTimeElapsed) {
+  split() {
     const active = this.segments[this.activeSegmentIndex];
     active.timeElapsed = this.currentSegmentTime;
-    active.accumulativeTimeElapsed = totalTimeElapsed;
+    this.dispatcher.onSplit(active, this.getCurrentRunTotal());
     this.currentSegmentTime = 0;
     this.activeSegmentIndex++;
-    this.dispatcher.onSplit(active);
   }
 
   reset() {
+    let accumulativeBestTotal = 0;
     this.segments.forEach((s) => {
       s.timeElapsed = 0;
-      s.accumulativeTimeElapsed = 0;
-      this.dispatcher.onSegmentCleared(s);
+      accumulativeBestTotal += s.best;
+      this.dispatcher.onSegmentCleared(s, accumulativeBestTotal);
     });
   }
 
@@ -90,6 +90,15 @@ class Run {
       if (!s.best || s.timeElapsed < s.best) s.best = s.timeElapsed;
     });
     this.reset();
+  }
+
+  getCurrentRunTotal() {
+    let total = 0;
+    for (let i = 0; i < this.segments.length; i++) {
+      total += this.segments[i].timeElapsed;
+      if (i === this.activeSegmentIndex) return total;
+    }
+    return total;
   }
 }
 
@@ -156,7 +165,7 @@ class SpeedrunTimer {
   split() {
     if (!this.isInStatus("RUNNING")) return;
     this.#syncTimer();
-    this.run.split(this.totalTimeElapsed);
+    this.run.split();
     if (!this.run.hasNextSegment()) this.finish();
   }
 
@@ -306,42 +315,39 @@ UI.onPageReady(() => {
     }
   });
 
-  function updateSegment(segment, type) {
-    const { id, best, timeElapsed, accumulativeTimeElapsed } = segment;
+  UI.addEvent(document, "segmentcleared", (e) => {
+    const { segment, accumulativeBestTotal } = e.detail;
+    const { id } = segment;
+
     const segmentEl = document.querySelector(`[data-id="${id}"]`);
     const currentEl = segmentEl.querySelector(".segment-current");
     const bestEl = segmentEl.querySelector(".segment-best");
     const totalEl = segmentEl.querySelector(".segment-total");
 
-    switch (type) {
-      case "reset":
-        totalEl.textContent = "";
-        currentEl.textContent = "";
-        UI.hide(currentEl);
-        bestEl.textContent = `${fmt(best)}`;
-        UI.show(bestEl);
-        break;
-      case "split":
-        const color = timeElapsed > best ? "red" : timeElapsed < best ? "green" : "black";
-        const diff = best > 0 ? fmt(timeElapsed - best, true) : "";
-        totalEl.classList.add(color);
-        totalEl.textContent = diff;
-        bestEl.textContent = ``;
-        UI.hide(bestEl);
-        currentEl.textContent = `${fmt(accumulativeTimeElapsed)}`;
-        UI.show(currentEl);
-        break;
-      default:
-        break;
-    }
-  }
-
-  UI.addEvent(document, "segmentcleared", (e) => {
-    updateSegment(e.detail.segment, "reset");
+    totalEl.textContent = "";
+    currentEl.textContent = "";
+    UI.hide(currentEl);
+    bestEl.textContent = `${fmt(accumulativeBestTotal)}`;
+    UI.show(bestEl);
   });
 
   UI.addEvent(document, "split", (e) => {
-    updateSegment(e.detail.segment, "split");
+    const { segment, currentRunTotal } = e.detail;
+    const { id, timeElapsed, best } = segment;
+    console.log(segment);
+    const segmentEl = document.querySelector(`[data-id="${id}"]`);
+    const currentEl = segmentEl.querySelector(".segment-current");
+    const bestEl = segmentEl.querySelector(".segment-best");
+    const totalEl = segmentEl.querySelector(".segment-total");
+
+    const color = timeElapsed > best ? "red" : timeElapsed < best ? "green" : "black";
+    const currentComparedToBest = best > 0 ? fmt(timeElapsed - best, true) : "";
+    totalEl.classList.add(color);
+    totalEl.textContent = currentComparedToBest;
+    bestEl.textContent = ``;
+    UI.hide(bestEl);
+    currentEl.textContent = `${fmt(currentRunTotal)}`;
+    UI.show(currentEl);
   });
   // #endregion TIMER EVENTS
 });
