@@ -1,0 +1,12 @@
+.red {
+  color: red;
+}
+.green {
+  color: green;
+}
+
+.segment {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  text-align: center;
+}

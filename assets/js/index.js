@@ -233,13 +233,10 @@ UI.onPageReady(() => {
   const save = document.getElementById("timerSave");
   const segments = document.getElementById("segments");
 
-  // TODO: move styles into css file
   resEvilSplits.forEach(
     (v, i) =>
       (segments.innerHTML += `
-    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; text-align: center;" data-id="${
-      v.id
-    }">
+    <div class="segment" data-id="${v.id}">
       <p class="segment-name">${v.name ?? i}</p> 
       <p class="segment-total"></p> 
       <p class="segment-current" style="display:none;"></p>
@@ -334,7 +331,6 @@ UI.onPageReady(() => {
   UI.addEvent(document, "split", (e) => {
     const { segment, currentRunTotal } = e.detail;
     const { id, timeElapsed, best } = segment;
-    console.log(segment);
     const segmentEl = document.querySelector(`[data-id="${id}"]`);
     const currentEl = segmentEl.querySelector(".segment-current");
     const bestEl = segmentEl.querySelector(".segment-best");
