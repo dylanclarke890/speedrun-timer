@@ -45,8 +45,8 @@ class Segment {
     this.name = name;
     this.duringPb = duringPb ?? 0;
     this.best = best ?? 0;
-    this.segmentTotal = 0;
-    this.totalSoFar = 0;
+    this.timeElapsed = 0;
+    this.accumulativeTimeElapsed = 0;
   }
 }
 
@@ -70,8 +70,8 @@ class Run {
 
   split(totalTimeElapsed) {
     const active = this.segments[this.activeSegmentIndex];
-    active.segmentTotal = this.currentSegmentTime;
-    active.totalSoFar = totalTimeElapsed;
+    active.timeElapsed = this.currentSegmentTime;
+    active.accumulativeTimeElapsed = totalTimeElapsed;
     this.currentSegmentTime = 0;
     this.activeSegmentIndex++;
     this.dispatcher.onSplit(active);
@@ -79,8 +79,8 @@ class Run {
 
   reset() {
     this.segments.forEach((s) => {
-      s.segmentTotal = 0;
-      s.totalSoFar = 0;
+      s.timeElapsed = 0;
+      s.accumulativeTimeElapsed = 0;
       this.dispatcher.onSegmentCleared(s);
     });
   }
@@ -303,7 +303,7 @@ UI.onPageReady(() => {
   });
 
   function updateSegment(segment, type) {
-    const { id, best, segmentTotal, totalSoFar } = segment;
+    const { id, best, timeElapsed, accumulativeTimeElapsed } = segment;
     const segmentEl = document.querySelector(`[data-id="${id}"]`);
     const currentOrBestEl = segmentEl.querySelector(".segment-current-or-best");
     const totalEl = segmentEl.querySelector(".segment-total");
@@ -311,18 +311,18 @@ UI.onPageReady(() => {
     switch (type) {
       case "reset":
         totalEl.textContent = "";
+        currentOrBestEl.textContent = `${fmt(best)}`;
         break;
       case "split":
-        const color = segmentTotal > best ? "red" : segmentTotal < best ? "green" : "black";
-        const diff = best > 0 ? fmt(segmentTotal - best, true) : "";
+        const color = timeElapsed > best ? "red" : timeElapsed < best ? "green" : "black";
+        const diff = best > 0 ? fmt(timeElapsed - best, true) : "";
         totalEl.classList.add(color);
         totalEl.textContent = diff;
+        currentOrBestEl.textContent = `${fmt(accumulativeTimeElapsed)}`;
         break;
       default:
         break;
     }
-
-    currentOrBestEl.textContent = `${fmt(totalSoFar)}`;
   }
 
   UI.addEvent(document, "segmentcleared", (e) => {
