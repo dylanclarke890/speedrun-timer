@@ -35,9 +35,8 @@ class TimerEventDispatcher {
 
   onTimeChanged = (time) => this.#dispatch("timechanged", { time });
   onStatusChanged = (status) => this.#dispatch("statuschanged", { status });
-  onSplit = (segment, currentRunTotal) => this.#dispatch("split", { segment, currentRunTotal });
-  onSegmentCleared = (segment, accumulativeBestTotal) =>
-    this.#dispatch("segmentcleared", { segment, accumulativeBestTotal });
+  onSplit = (segment) => this.#dispatch("split", { segment });
+  onSegmentCleared = (segment) => this.#dispatch("segmentcleared", { segment });
 }
 
 class Segment {
@@ -54,8 +53,6 @@ class Run {
   constructor({ segments, dispatcher } = {}) {
     this.segments = segments;
     this.activeSegmentIndex = -1;
-    this.currentSegmentTime = 0;
-    this.totalTimeElapsed = 0;
     this.dispatcher = dispatcher ?? new TimerEventDispatcher();
   }
 
@@ -63,29 +60,20 @@ class Run {
     this.activeSegmentIndex = 0;
   }
 
-  syncActiveSegment(timeElapsed) {
-    this.currentSegmentTime += timeElapsed;
-    this.totalTimeElapsed += timeElapsed;
-  }
-
   hasNextSegment = () => this.activeSegmentIndex < this.segments.length;
 
-  split() {
+  split(timeElapsed) {
     const active = this.segments[this.activeSegmentIndex];
-    active.timeElapsed = this.currentSegmentTime;
-    this.dispatcher.onSplit(active, this.totalTimeElapsed);
-    this.currentSegmentTime = 0;
+    active.timeElapsed = timeElapsed;
+    this.dispatcher.onSplit(active);
     this.activeSegmentIndex++;
   }
 
   reset() {
-    let accumulativeBestTotal = 0;
     this.segments.forEach((s) => {
       s.timeElapsed = 0;
-      accumulativeBestTotal += s.best;
-      this.dispatcher.onSegmentCleared(s, accumulativeBestTotal);
+      this.dispatcher.onSegmentCleared(s);
     });
-    this.totalTimeElapsed = 0;
   }
 
   saveBest() {
@@ -108,7 +96,7 @@ class SpeedrunTimer {
     this.run = run;
     this.dispatcher = dispatcher ?? new TimerEventDispatcher();
     this.lastRead = 0;
-    this.totalTimeElapsed = 0;
+    this.timeElapsed = 0;
     this.setStatus("INITIALISED");
   }
 
@@ -126,9 +114,7 @@ class SpeedrunTimer {
   // #region TIMER
 
   #syncTimer() {
-    const timeElapsedSinceLastRead = this.timeElapsedSinceLastReading();
-    this.totalTimeElapsed += timeElapsedSinceLastRead;
-    this.run.syncActiveSegment(timeElapsedSinceLastRead);
+    this.timeElapsed += this.timeElapsedSinceLastReading();
     this.#timeChanged();
   }
 
@@ -150,7 +136,7 @@ class SpeedrunTimer {
   reset() {
     if (!this.isInStatus("PAUSED") && !this.isInStatus("FINISHED")) return;
     this.lastRead = 0;
-    this.totalTimeElapsed = 0;
+    this.timeElapsed = 0;
     this.#timeChanged();
     this.run.reset();
     this.setStatus("INITIALISED");
@@ -159,7 +145,9 @@ class SpeedrunTimer {
   split() {
     if (!this.isInStatus("RUNNING")) return;
     this.#syncTimer();
-    this.run.split();
+    this.run.split(this.timeElapsed);
+    this.timeElapsed = 0;
+    this.#timeChanged();
     if (!this.run.hasNextSegment()) this.finish();
   }
 
@@ -181,7 +169,7 @@ class SpeedrunTimer {
   // #region HELPERS
 
   #timeChanged() {
-    this.dispatcher.onTimeChanged(this.totalTimeElapsed);
+    this.dispatcher.onTimeChanged(this.timeElapsed);
   }
 
   timeElapsedSinceLastReading(updateLastRead = true) {
@@ -273,7 +261,7 @@ UI.onPageReady(() => {
   UI.addEvent(document, "timechanged", (e) => (timerResult.innerHTML = fmt(e.detail.time)));
   UI.addEvent(document, "statuschanged", (e) => {
     const { INITIALISED, RUNNING, PAUSED, FINISHED } = SpeedrunTimer.STATUSES;
-    UI.hide(show);
+    UI.hide(start);
     UI.hide(pause);
     UI.hide(split);
     UI.hide(reset);
