@@ -247,23 +247,24 @@ UI.onPageReady(() => {
   UI.addEvent(save, "click", () => timer.saveBest());
 
   UI.addEvent(document, "keyup", (e) => {
-    // TODO: Have the keyboard call the timer events themselves or should they share a "UI"
-    // function along with the click events that calls the timer methods?
     switch (e.code) {
       case "Enter":
-        timer.start();
+        UI.triggerEvent(start, "click");
         break;
       case "Space":
-        timer.split();
+        UI.triggerEvent(split, "click");
         break;
       case "KeyP":
-        timer.pause();
+        UI.triggerEvent(pause, "click");
         break;
       case "Escape":
-        timer.reset();
+        UI.triggerEvent(reset, "click");
         break;
       case "S":
-        timer.saveBest();
+        UI.triggerEvent(save, "click");
+        break;
+      default:
+        break;
     }
   });
   // #endregion USER INPUT
