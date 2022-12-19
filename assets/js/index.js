@@ -55,6 +55,7 @@ class Run {
     this.segments = segments;
     this.activeSegmentIndex = -1;
     this.currentSegmentTime = 0;
+    this.totalTimeElapsed = 0;
     this.dispatcher = dispatcher ?? new TimerEventDispatcher();
   }
 
@@ -64,6 +65,7 @@ class Run {
 
   syncActiveSegment(timeElapsed) {
     this.currentSegmentTime += timeElapsed;
+    this.totalTimeElapsed += timeElapsed;
   }
 
   hasNextSegment = () => this.activeSegmentIndex < this.segments.length;
@@ -71,7 +73,7 @@ class Run {
   split() {
     const active = this.segments[this.activeSegmentIndex];
     active.timeElapsed = this.currentSegmentTime;
-    this.dispatcher.onSplit(active, this.getCurrentRunTotal());
+    this.dispatcher.onSplit(active, this.totalTimeElapsed);
     this.currentSegmentTime = 0;
     this.activeSegmentIndex++;
   }
@@ -83,6 +85,7 @@ class Run {
       accumulativeBestTotal += s.best;
       this.dispatcher.onSegmentCleared(s, accumulativeBestTotal);
     });
+    this.totalTimeElapsed = 0;
   }
 
   saveBest() {
@@ -90,15 +93,6 @@ class Run {
       if (!s.best || s.timeElapsed < s.best) s.best = s.timeElapsed;
     });
     this.reset();
-  }
-
-  getCurrentRunTotal() {
-    let total = 0;
-    for (let i = 0; i < this.segments.length; i++) {
-      total += this.segments[i].timeElapsed;
-      if (i === this.activeSegmentIndex) return total;
-    }
-    return total;
   }
 }
 
@@ -278,32 +272,25 @@ UI.onPageReady(() => {
   UI.addEvent(document, "timechanged", (e) => (timerResult.innerHTML = fmt(e.detail.time)));
   UI.addEvent(document, "statuschanged", (e) => {
     const { INITIALISED, RUNNING, PAUSED, FINISHED } = SpeedrunTimer.STATUSES;
+    UI.hide(show);
+    UI.hide(pause);
+    UI.hide(split);
+    UI.hide(reset);
+    UI.hide(save);
+
     switch (e.detail.status) {
       case INITIALISED:
         UI.show(start);
-        UI.hide(pause);
-        UI.hide(split);
-        UI.hide(reset);
-        UI.hide(save);
         break;
       case RUNNING:
-        UI.hide(start);
         UI.show(pause);
         UI.show(split);
-        UI.hide(reset);
-        UI.hide(save);
         break;
       case PAUSED:
         UI.show(start);
-        UI.hide(pause);
-        UI.hide(split);
         UI.show(reset);
-        UI.hide(save);
         break;
       case FINISHED:
-        UI.hide(start);
-        UI.hide(pause);
-        UI.hide(split);
         UI.show(reset);
         UI.show(save);
         break;
@@ -331,6 +318,7 @@ UI.onPageReady(() => {
   UI.addEvent(document, "split", (e) => {
     const { segment, currentRunTotal } = e.detail;
     const { id, timeElapsed, best } = segment;
+
     const segmentEl = document.querySelector(`[data-id="${id}"]`);
     const currentEl = segmentEl.querySelector(".segment-current");
     const bestEl = segmentEl.querySelector(".segment-best");
