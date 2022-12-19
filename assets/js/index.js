@@ -1,23 +1,3 @@
-class Formatting {
-  static prefixWithZeroes = (num) => (num < 10 ? `0${num}` : num);
-
-  static msToShortTimeString(s, prefixSign = false) {
-    if (!s) return "--:--:--";
-    const isNegative = s < 0;
-    s = Math.abs(s);
-    const ms = s % 1000;
-    s = (s - ms) / 1000;
-    const secs = s % 60;
-    s = (s - secs) / 60;
-    const mins = s % 60;
-    const hrs = (s - mins) / 60;
-
-    const fmt = Formatting.prefixWithZeroes;
-    const timeString = (hrs ? fmt(hrs) + ":" : "") + fmt(mins) + ":" + fmt(secs) + "." + ms;
-    return `${prefixSign ? (isNegative ? "-" : "+") : ""}${timeString}`;
-  }
-}
-
 class TimerEventDispatcher {
   constructor(receiver) {
     this.receiver = receiver ?? document;
