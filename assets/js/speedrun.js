@@ -44,7 +44,42 @@ class Run {
     this.reset();
   }
 
-  registerEvents() {}
+  #getTimerActions() {
+    if (!this.buttons) this.buttons = {};
+  }
+
+  registerEvents() {
+    this.#getTimerActions();
+    const { start, pause, reset, split, save } = this.buttons;
+
+    UI.addEvent(start, "click", () => timer.start());
+    UI.addEvent(pause, "click", () => timer.pause());
+    UI.addEvent(reset, "click", () => timer.reset());
+    UI.addEvent(split, "click", () => timer.split());
+    UI.addEvent(save, "click", () => timer.saveBest());
+
+    UI.addEvent(document, "keyup", (e) => {
+      switch (e.code) {
+        case "Enter":
+          UI.triggerEvent(start, "click");
+          break;
+        case "Space":
+          UI.triggerEvent(split, "click");
+          break;
+        case "KeyP":
+          UI.triggerEvent(pause, "click");
+          break;
+        case "Escape":
+          UI.triggerEvent(reset, "click");
+          break;
+        case "S":
+          UI.triggerEvent(save, "click");
+          break;
+        default:
+          break;
+      }
+    });
+  }
 }
 
 class Timer {
