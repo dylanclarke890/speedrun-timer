@@ -35,7 +35,9 @@ class SpeedRun {
   }
 
   split() {
-    this.timer.split();
+    this.timer.syncTimer();
+    // TODO: Update active segment.
+    this.activeSegment++;
     if (!this.hasNextSegment()) this.finish();
   }
 
@@ -49,18 +51,17 @@ class SpeedRun {
   }
 
   #assignTimerElements() {
-    if (!this.elements)
-      this.elements = {
-        buttons: {
-          start: document.getElementById("timerStart"),
-          pause: document.getElementById("timerPause"),
-          reset: document.getElementById("timerReset"),
-          split: document.getElementById("timerSplit"),
-          save: document.getElementById("timerSave"),
-        },
-        currentSegment: document.getElementById("currentSplit"),
-        total: document.getElementById("timer"),
-      };
+    this.elements = {
+      buttons: {
+        start: document.getElementById("timerStart"),
+        pause: document.getElementById("timerPause"),
+        reset: document.getElementById("timerReset"),
+        split: document.getElementById("timerSplit"),
+        save: document.getElementById("timerSave"),
+      },
+      currentSegment: document.getElementById("currentSplit"),
+      total: document.getElementById("timer"),
+    };
   }
 
   #handleStatusChanged = (status) => {
@@ -96,7 +97,9 @@ class SpeedRun {
 
   #handleTimeChanged = (elapsed) => {
     this.totalTimeElapsed += elapsed;
+    this.currentSegmentTimeElapsed += elapsed;
     this.elements.total.textContent = this.timeFormat(this.totalTimeElapsed);
+    this.elements.currentSegment.textContent = this.timeFormat(this.currentSegmentTimeElapsed);
   };
 
   #getTimer() {
