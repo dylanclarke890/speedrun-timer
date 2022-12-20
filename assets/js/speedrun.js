@@ -1,5 +1,5 @@
 class Segment {
-  constructor({ name, endedAt, bestDuration, isSkipped, histories } = {}) {
+  constructor({ name, endedAt, bestDuration, isSkipped = false, histories = [] } = {}) {
     this.name = name;
     this.endedAt = endedAt;
     this.bestDuration = bestDuration;
@@ -15,7 +15,7 @@ class SpeedRun {
     this.activeSegment = 0;
     this.currentSegmentTimeElapsed = 0;
     this.totalTimeElapsed = 0;
-    this.timeFormat = Formatting.msToShortTimeString;
+    this.timeFormat = (v) => Formatting.msToShortTimeString(Math.round(v));
     this.#setup();
     this.timer = this.#getTimer();
   }
@@ -40,7 +40,7 @@ class SpeedRun {
   }
 
   finish() {
-    this.timer.finish();
+    this.timer.stop();
   }
 
   saveBest() {
@@ -92,11 +92,12 @@ class SpeedRun {
       default:
         break;
     }
-  }
+  };
 
-  #handleTimeChanged = (time) => {
-    this.elements.total.textContent = this.timeFormat(time);
-  }
+  #handleTimeChanged = (elapsed) => {
+    this.totalTimeElapsed += elapsed;
+    this.elements.total.textContent = this.timeFormat(this.totalTimeElapsed);
+  };
 
   #getTimer() {
     const settings = {
@@ -171,8 +172,9 @@ class Timer {
   syncTimer() {
     const now = performance.now();
     const elapsed = now - this.lastRead;
+    this.lastRead = performance.now();
     this.timeElapsed += elapsed;
-    this.callbacks.timeChanged(this.timeElapsed);
+    this.callbacks.timeChanged(elapsed);
   }
 
   start() {
@@ -196,7 +198,7 @@ class Timer {
     this.setStatus("INITIALISED");
   }
 
-  finish() {
+  stop() {
     if (this.isInStatus("INITIALISED")) return;
     clearInterval(this.interval);
     this.syncTimer();
@@ -208,8 +210,8 @@ UI.onPageReady(() => {
   const segments = [
     new Segment({
       name: "Free Mia Cutscene",
-      duringPb: 100023,
-      best: 120535,
+      endedAt: 100023,
+      bestDuration: 120535,
     }),
     new Segment({
       name: "Welcome to the family son",
@@ -222,5 +224,6 @@ UI.onPageReady(() => {
       best: 0,
     }),
   ];
-  const run = new SpeedRun({ segments });
+
+  window.run = new SpeedRun({ segments });
 });
