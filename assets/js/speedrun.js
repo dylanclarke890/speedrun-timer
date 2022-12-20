@@ -12,12 +12,15 @@ class SpeedRun {
   constructor({ name, segments }) {
     this.name = name;
     this.segments = segments;
-    this.currentSegment = 0;
+    this.activeSegment = 0;
+    this.currentSegmentTimeElapsed = 0;
+    this.totalTimeElapsed = 0;
+    this.timeFormat = Formatting.msToShortTimeString;
+    this.#setup();
     this.timer = this.#getTimer();
-    this.#setupUserInputEvents();
   }
 
-  hasNextSegment = () => this.currentSegment < this.segments.length;
+  hasNextSegment = () => this.activeSegment < this.segments.length;
 
   start() {
     this.timer.start();
@@ -45,30 +48,73 @@ class SpeedRun {
     this.reset();
   }
 
-  #assignTimerBtns() {
-    if (!this.buttons)
-      this.buttons = {
-        start: document.getElementById("timerStart"),
-        pause: document.getElementById("timerPause"),
-        reset: document.getElementById("timerReset"),
-        split: document.getElementById("timerSplit"),
-        save: document.getElementById("timerSave"),
+  #assignTimerElements() {
+    if (!this.elements)
+      this.elements = {
+        buttons: {
+          start: document.getElementById("timerStart"),
+          pause: document.getElementById("timerPause"),
+          reset: document.getElementById("timerReset"),
+          split: document.getElementById("timerSplit"),
+          save: document.getElementById("timerSave"),
+        },
+        currentSegment: document.getElementById("currentSplit"),
+        total: document.getElementById("timer"),
       };
+  }
+
+  #handleStatusChanged = (status) => {
+    const { INITIALISED, RUNNING, PAUSED, FINISHED } = Timer.STATUSES;
+    const { start, pause, reset, split, save } = this.elements.buttons;
+
+    UI.hide(start);
+    UI.hide(pause);
+    UI.hide(split);
+    UI.hide(reset);
+    UI.hide(save);
+
+    switch (status) {
+      case INITIALISED:
+        UI.show(start);
+        break;
+      case RUNNING:
+        UI.show(pause);
+        UI.show(split);
+        break;
+      case PAUSED:
+        UI.show(start);
+        UI.show(reset);
+        break;
+      case FINISHED:
+        UI.show(reset);
+        UI.show(save);
+        break;
+      default:
+        break;
+    }
+  }
+
+  #handleTimeChanged = (time) => {
+    this.elements.total.textContent = this.timeFormat(time);
   }
 
   #getTimer() {
     const settings = {
       callbacks: {
-        timeChanged: (newTime) => {},
-        statusChanged: (newStatus) => {},
+        timeChanged: this.#handleTimeChanged,
+        statusChanged: this.#handleStatusChanged,
       },
     };
     return new Timer(settings);
   }
 
-  #setupUserInputEvents() {
-    this.#assignTimerBtns();
-    const { start, pause, reset, split, save } = this.buttons;
+  #setup() {
+    this.#assignTimerElements();
+    const { buttons, currentSegment, total } = this.elements;
+    const { start, pause, reset, split, save } = buttons;
+
+    total.textContent = this.timeFormat(0);
+    currentSegment.textContent = this.timeFormat(0);
 
     UI.addEvent(start, "click", () => this.start());
     UI.addEvent(pause, "click", () => this.pause());

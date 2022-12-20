@@ -213,34 +213,7 @@ UI.onPageReady(() => {
 
   // #region TIMER EVENTS
   UI.addEvent(document, "timechanged", (e) => (timerResult.innerHTML = fmt(e.detail.time)));
-  UI.addEvent(document, "statuschanged", (e) => {
-    const { INITIALISED, RUNNING, PAUSED, FINISHED } = SpeedrunTimer.STATUSES;
-    UI.hide(start);
-    UI.hide(pause);
-    UI.hide(split);
-    UI.hide(reset);
-    UI.hide(save);
-
-    switch (e.detail.status) {
-      case INITIALISED:
-        UI.show(start);
-        break;
-      case RUNNING:
-        UI.show(pause);
-        UI.show(split);
-        break;
-      case PAUSED:
-        UI.show(start);
-        UI.show(reset);
-        break;
-      case FINISHED:
-        UI.show(reset);
-        UI.show(save);
-        break;
-      default:
-        break;
-    }
-  });
+  UI.addEvent(document, "statuschanged", (e) => {});
 
   UI.addEvent(document, "segmentcleared", (e) => {
     const { segment, accumulativeBestTotal } = e.detail;

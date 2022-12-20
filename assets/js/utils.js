@@ -192,8 +192,8 @@ class UI {
 class Formatting {
   static prefixWithZeroes = (num) => (num < 10 ? `0${num}` : num);
 
-  static msToShortTimeString(s, prefixSign = false) {
-    if (!s) return "--:--:--";
+  static msToShortTimeString(s, { prefixSign = false, fillEmptyWithZeroes = true } = {}) {
+    if (!s) return fillEmptyWithZeroes ? "00:00:00" : "--:--:--";
     const isNegative = s < 0;
     s = Math.abs(s);
     const ms = s % 1000;
