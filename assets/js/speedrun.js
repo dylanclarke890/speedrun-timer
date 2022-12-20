@@ -8,12 +8,13 @@ class Segment {
   }
 }
 
-class Run {
+class SpeedRun {
   constructor({ name, segments }) {
     this.name = name;
     this.segments = segments;
     this.currentSegment = 0;
-    this.timer = new Timer();
+    this.timer = this.#getTimer();
+    this.#setupUserInputEvents();
   }
 
   hasNextSegment = () => this.currentSegment < this.segments.length;
@@ -44,19 +45,36 @@ class Run {
     this.reset();
   }
 
-  #getTimerActions() {
-    if (!this.buttons) this.buttons = {};
+  #assignTimerBtns() {
+    if (!this.buttons)
+      this.buttons = {
+        start: document.getElementById("timerStart"),
+        pause: document.getElementById("timerPause"),
+        reset: document.getElementById("timerReset"),
+        split: document.getElementById("timerSplit"),
+        save: document.getElementById("timerSave"),
+      };
   }
 
-  registerEvents() {
-    this.#getTimerActions();
+  #getTimer() {
+    const settings = {
+      callbacks: {
+        timeChanged: (newTime) => {},
+        statusChanged: (newStatus) => {},
+      },
+    };
+    return new Timer(settings);
+  }
+
+  #setupUserInputEvents() {
+    this.#assignTimerBtns();
     const { start, pause, reset, split, save } = this.buttons;
 
-    UI.addEvent(start, "click", () => timer.start());
-    UI.addEvent(pause, "click", () => timer.pause());
-    UI.addEvent(reset, "click", () => timer.reset());
-    UI.addEvent(split, "click", () => timer.split());
-    UI.addEvent(save, "click", () => timer.saveBest());
+    UI.addEvent(start, "click", () => this.start());
+    UI.addEvent(pause, "click", () => this.pause());
+    UI.addEvent(reset, "click", () => this.reset());
+    UI.addEvent(split, "click", () => this.split());
+    UI.addEvent(save, "click", () => this.saveBest());
 
     UI.addEvent(document, "keyup", (e) => {
       switch (e.code) {
@@ -90,33 +108,38 @@ class Timer {
     STOPPED: 4,
   };
 
-  constructor() {
+  constructor({ callbacks = { timeChanged: (_) => null, statusChanged: (_) => null } } = {}) {
     this.lastRead = 0;
     this.timeElapsed = 0;
+    this.callbacks = callbacks;
     this.setStatus("INITIALISED");
   }
 
-  setStatus = (status) => (this.status = SpeedrunTimer.STATUSES[status]);
+  setStatus = (status) => {
+    this.status = Timer.STATUSES[status];
+    this.callbacks.statusChanged(this.status);
+  };
 
-  isInStatus = (status) => this.status === SpeedrunTimer.STATUSES[status];
+  isInStatus = (status) => this.status === Timer.STATUSES[status];
 
-  #syncTimer() {
+  syncTimer() {
     const now = performance.now();
     const elapsed = now - this.lastRead;
     this.timeElapsed += elapsed;
+    this.callbacks.timeChanged(this.timeElapsed);
   }
 
   start() {
     if (!this.isInStatus("INITIALISED") && !this.isInStatus("PAUSED")) return;
     this.lastRead = performance.now();
-    this.interval = setInterval(() => this.#syncTimer(), 100);
+    this.interval = setInterval(() => this.syncTimer(), 100);
     this.setStatus("RUNNING");
   }
 
   pause() {
     if (!this.isInStatus("RUNNING")) return;
     clearInterval(this.interval);
-    this.#syncTimer();
+    this.syncTimer();
     this.setStatus("PAUSED");
   }
 
@@ -127,15 +150,31 @@ class Timer {
     this.setStatus("INITIALISED");
   }
 
-  split() {
-    if (!this.isInStatus("RUNNING")) return;
-    this.#syncTimer();
-  }
-
   finish() {
     if (this.isInStatus("INITIALISED")) return;
     clearInterval(this.interval);
-    this.#syncTimer();
+    this.syncTimer();
     this.setStatus("STOPPED");
   }
 }
+
+UI.onPageReady(() => {
+  const segments = [
+    new Segment({
+      name: "Free Mia Cutscene",
+      duringPb: 100023,
+      best: 120535,
+    }),
+    new Segment({
+      name: "Welcome to the family son",
+      duringPb: 100023,
+      best: 120535,
+    }),
+    new Segment({
+      name: "Watch this *blows face off*",
+      duringPb: 0,
+      best: 0,
+    }),
+  ];
+  const run = new SpeedRun({ segments });
+});
