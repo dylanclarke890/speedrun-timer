@@ -66,19 +66,12 @@ class SpeedRun {
       current.bestDuration = this.currentSegmentTimeElapsed;
     current.updateHtml();
 
+    this.#updateSumOfBest();
     this.activeSegment++;
     this.currentSegmentTimeElapsed = 0;
 
     if (!this.hasNextSegment()) this.finish();
-    else {
-      const { name, current, best, pb } = this.elements.active;
-      const activeSegment = this.segments[this.activeSegment];
-
-      name.textContent = activeSegment.name;
-      best.textContent = this.timeFormat(activeSegment.bestDuration);
-      pb.textContent = ""; // TODO
-      current.textContent = this.timeFormat(0);
-    }
+    else this.#updateActiveSegment();
   }
 
   finish() {
@@ -109,6 +102,7 @@ class SpeedRun {
       },
       sumOfBest: document.querySelector(".sum-of-best"),
       total: document.getElementById("timer"),
+      segmentsContainer: document.getElementById("segments"),
     };
   }
 
@@ -160,30 +154,39 @@ class SpeedRun {
     return new Timer(settings);
   }
 
-  #displaySegments() {
-    const segmentsContainer = document.getElementById("segments");
+  #updateSegments() {
+    this.elements.segmentsContainer.innerHTML = "";
     for (let i = 0; i < this.segments.length; i++)
-      segmentsContainer.innerHTML += this.segments[i].initialHtml(i);
+      this.elements.segmentsContainer.innerHTML += this.segments[i].initialHtml(i);
   }
 
-  #setup() {
-    this.#displaySegments();
-    this.#assignTimerElements();
-
-    const { buttons, active, total, sumOfBest } = this.elements;
-    const { start, pause, reset, split, save } = buttons;
-    const { name, current, best, pb } = active;
-    const activeSegment = this.segments[0];
-
-    total.textContent = this.timeFormat(0);
+  #updateActiveSegment() {
+    const { name, current, best, pb } = this.elements.active;
+    const activeSegment = this.segments[this.activeSegment];
 
     name.textContent = activeSegment.name;
     best.textContent = this.timeFormat(activeSegment.bestDuration);
     pb.textContent = this.timeFormat(0); // TODO
     current.textContent = this.timeFormat(0);
-    sumOfBest.textContent = this.timeFormat(
-      this.segments.map((v) => v.bestDuration ?? 0).reduce((a, b) => a + b)
-    );
+  }
+
+  #updateSumOfBest() {
+    const hasSegmentsWithoutBestTime = this.segments.some((v) => !v.bestDuration);
+    this.elements.sumOfBest.textContent = hasSegmentsWithoutBestTime
+      ? ""
+      : this.timeFormat(this.segments.map((v) => v.bestDuration).reduce((a, b) => a + b));
+  }
+
+  #setup() {
+    this.#assignTimerElements();
+
+    const { buttons, total } = this.elements;
+    const { start, pause, reset, split, save } = buttons;
+
+    this.#updateSegments();
+    this.#updateActiveSegment();
+    this.#updateSumOfBest();
+    total.textContent = this.timeFormat(0);
 
     UI.addEvent(start, "click", () => this.start());
     UI.addEvent(pause, "click", () => this.pause());
@@ -289,8 +292,8 @@ UI.onPageReady(() => {
     }),
     new Segment({
       name: "Watch this *blows face off*",
-      endedAt: 0,
-      bestDuration: 0,
+      endedAt: 183000,
+      bestDuration: 62000,
     }),
   ];
 
