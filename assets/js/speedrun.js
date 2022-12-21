@@ -7,16 +7,13 @@ class Segment {
     // TODO: add logic for skipping
     this.isSkipped = isSkipped;
     this.histories = histories;
-    this.order = -1; // will be set in initialHtml method.
     this.timeFormat = (v) => Formatting.msToShortTimeString(Math.round(v));
   }
 
-  // TODO: Do we really need the order here? We've got an ID to reference by.
   initialHtml = (order) => {
-    this.order = order;
     return `
-    <div class="segment" data-id="${this.id}" data-order="${order}">
-      <p class="segment-name">${this.name ?? order}</p> 
+    <div class="segment" data-id="${this.id}">
+      <p class="segment-name">${this.name ?? order + 1}</p> 
       <p class="segment-total"></p> 
       <p class="segment-current" style="display:none;"></p>
       <p class="segment-ended-at">${this.timeFormat(this.endedAt)}</p>
