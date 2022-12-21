@@ -44,7 +44,6 @@ class SpeedRun {
     this.totalTimeElapsed = 0;
     this.currentSegmentTimeElapsed = 0;
     this.activeSegment = 0;
-    this.#handleTimeChanged(0);
     this.timer.reset();
   }
 
@@ -224,6 +223,7 @@ class Timer {
     if (!this.isInStatus("PAUSED") && !this.isInStatus("STOPPED")) return;
     this.lastRead = 0;
     this.timeElapsed = 0;
+    this.callbacks.timeChanged(0);
     this.setStatus("INITIALISED");
   }
 
