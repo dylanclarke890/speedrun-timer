@@ -1,11 +1,21 @@
 class Segment {
-  constructor({ name, endedAt, bestDuration, isSkipped = false, histories = [] } = {}) {
+  constructor({ id, name, endedAt, bestDuration, isSkipped = false, histories = [] } = {}) {
+    this.id = id ?? UI.uniqueId();
     this.name = name;
     this.endedAt = endedAt;
     this.bestDuration = bestDuration;
     this.isSkipped = isSkipped;
     this.histories = histories;
+    this.timeFormat = (v) => Formatting.prefixSingleDigitsWithZero(Math.round(v));
   }
+
+  initialHtml = (order) => `
+    <div class="segment" data-id="${this.id}" data-order="${order}">
+      <p class="segment-name">${this.name ?? order}</p> 
+      <p class="segment-total"></p> 
+      <p class="segment-current" style="display:none;"></p>
+      <p class="segment-best">${this.timeFormat(this.bestDuration)}</p>
+    </div>`;
 }
 
 class SpeedRun {
@@ -31,13 +41,21 @@ class SpeedRun {
   }
 
   reset() {
+    this.totalTimeElapsed = 0;
+    this.currentSegmentTimeElapsed = 0;
+    this.activeSegment = 0;
+    this.#handleTimeChanged(0);
     this.timer.reset();
   }
 
   split() {
     this.timer.syncTimer();
-    // TODO: Update active segment.
+    const current = this.segments[this.activeSegment];
+    current.endedAt = this.totalTimeElapsed;
+    if (!current.bestDuration || current.bestDuration > this.currentSegmentTimeElapsed)
+      current.bestDuration = this.currentSegmentTimeElapsed;
     this.activeSegment++;
+    this.currentSegmentTimeElapsed = 0;
     if (!this.hasNextSegment()) this.finish();
   }
 
@@ -65,7 +83,7 @@ class SpeedRun {
   }
 
   #handleStatusChanged = (status) => {
-    const { INITIALISED, RUNNING, PAUSED, FINISHED } = Timer.STATUSES;
+    const { INITIALISED, RUNNING, PAUSED, STOPPED } = Timer.STATUSES;
     const { start, pause, reset, split, save } = this.elements.buttons;
 
     UI.hide(start);
@@ -86,7 +104,7 @@ class SpeedRun {
         UI.show(start);
         UI.show(reset);
         break;
-      case FINISHED:
+      case STOPPED:
         UI.show(reset);
         UI.show(save);
         break;
@@ -112,8 +130,16 @@ class SpeedRun {
     return new Timer(settings);
   }
 
+  #displaySegments() {
+    const segmentsContainer = document.getElementById("segments");
+    for (let i = 0; i < this.segments.length; i++)
+      segmentsContainer.innerHTML += this.segments[i].initialHtml(i);
+  }
+
   #setup() {
+    this.#displaySegments();
     this.#assignTimerElements();
+
     const { buttons, currentSegment, total } = this.elements;
     const { start, pause, reset, split, save } = buttons;
 
@@ -213,18 +239,18 @@ UI.onPageReady(() => {
   const segments = [
     new Segment({
       name: "Free Mia Cutscene",
-      endedAt: 100023,
-      bestDuration: 120535,
+      endedAt: 60000,
+      bestDuration: 60000,
     }),
     new Segment({
       name: "Welcome to the family son",
-      duringPb: 100023,
-      best: 120535,
+      endedAt: 121000,
+      bestDuration: 61000,
     }),
     new Segment({
       name: "Watch this *blows face off*",
-      duringPb: 0,
-      best: 0,
+      endedAt: 0,
+      bestDuration: 0,
     }),
   ];
 

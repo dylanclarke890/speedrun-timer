@@ -190,7 +190,7 @@ class UI {
 }
 
 class Formatting {
-  static prefixWithZeroes = (num) => (num < 10 ? `0${num}` : num);
+  static prefixSingleDigitsWithZero = (num) => (num < 10 ? `0${num}` : num);
 
   static msToShortTimeString(s, { prefixSign = false, fillEmptyWithZeroes = true } = {}) {
     if (!s) return fillEmptyWithZeroes ? "00:00:00" : "--:--:--";
@@ -203,7 +203,7 @@ class Formatting {
     const mins = s % 60;
     const hrs = (s - mins) / 60;
 
-    const fmt = Formatting.prefixWithZeroes;
+    const fmt = Formatting.prefixSingleDigitsWithZero;
     const timeString = (hrs ? fmt(hrs) + ":" : "") + fmt(mins) + ":" + fmt(secs) + "." + ms;
     return `${prefixSign ? (isNegative ? "-" : "+") : ""}${timeString}`;
   }
