@@ -193,7 +193,7 @@ class Formatting {
   static prefixSingleDigitsWithZero = (num) => (num < 10 ? `0${num}` : num);
 
   static msToShortTimeString(s, { prefixSign = false, fillEmptyWithZeroes = true } = {}) {
-    if (!s) return fillEmptyWithZeroes ? "00:00:00" : "--:--:--";
+    if (!s) return fillEmptyWithZeroes ? "00:00.00" : "--:--:--";
     const isNegative = s < 0;
     s = Math.abs(s);
     const ms = s % 1000;
@@ -204,7 +204,7 @@ class Formatting {
     const hrs = (s - mins) / 60;
 
     const fmt = Formatting.prefixSingleDigitsWithZero;
-    const timeString = (hrs ? fmt(hrs) + ":" : "") + fmt(mins) + ":" + fmt(secs) + "." + ms;
+    const timeString = (hrs ? fmt(hrs) + ":" : "") + fmt(mins) + ":" + fmt(secs) + "." + fmt(ms);
     return `${prefixSign ? (isNegative ? "-" : "+") : ""}${timeString}`;
   }
 }

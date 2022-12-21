@@ -4,18 +4,30 @@ class Segment {
     this.name = name;
     this.endedAt = endedAt;
     this.bestDuration = bestDuration;
+    // TODO: add logic for skipping
     this.isSkipped = isSkipped;
     this.histories = histories;
-    this.timeFormat = (v) => Formatting.prefixSingleDigitsWithZero(Math.round(v));
+    this.order = -1; // will be set in initialHtml method.
+    this.timeFormat = (v) => Formatting.msToShortTimeString(Math.round(v));
   }
 
-  initialHtml = (order) => `
+  // TODO: Do we really need the order here? We've got an ID to reference by.
+  initialHtml = (order) => {
+    this.order = order;
+    return `
     <div class="segment" data-id="${this.id}" data-order="${order}">
       <p class="segment-name">${this.name ?? order}</p> 
       <p class="segment-total"></p> 
       <p class="segment-current" style="display:none;"></p>
-      <p class="segment-best">${this.timeFormat(this.bestDuration)}</p>
+      <p class="segment-ended-at">${this.timeFormat(this.endedAt)}</p>
     </div>`;
+  };
+
+  updateHtml = () => {
+    const element = document.querySelector(`[data-id=${this.id}]`);
+    if (!element) throw new Error(`${this.id} is not a valid DOM selector.`);
+    element.querySelector(".segment-ended-at").innerHTML = this.timeFormat(this.endedAt);
+  };
 }
 
 class SpeedRun {
@@ -48,11 +60,15 @@ class SpeedRun {
   }
 
   split() {
+    if (!this.timer.isInStatus("RUNNING")) return;
     this.timer.syncTimer();
+
     const current = this.segments[this.activeSegment];
     current.endedAt = this.totalTimeElapsed;
     if (!current.bestDuration || current.bestDuration > this.currentSegmentTimeElapsed)
       current.bestDuration = this.currentSegmentTimeElapsed;
+    current.updateHtml();
+
     this.activeSegment++;
     this.currentSegmentTimeElapsed = 0;
     if (!this.hasNextSegment()) this.finish();
@@ -64,6 +80,7 @@ class SpeedRun {
 
   saveBest() {
     if (!this.timer.isInStatus("STOPPED")) return;
+    // TODO: save best.
     this.reset();
   }
 
