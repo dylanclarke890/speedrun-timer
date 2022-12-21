@@ -155,7 +155,7 @@ class SpeedRun {
     return new Timer(settings);
   }
 
-  #updateSegments() {
+  #createSegments() {
     this.elements.segmentsContainer.innerHTML = "";
     for (let i = 0; i < this.segments.length; i++)
       this.elements.segmentsContainer.innerHTML += this.segments[i].initialHtml(i);
@@ -184,7 +184,7 @@ class SpeedRun {
     const { buttons, total } = this.elements;
     const { start, pause, reset, split, save } = buttons;
 
-    this.#updateSegments();
+    this.#createSegments();
     this.#updateActiveSegment();
     this.#updateSumOfBest();
     total.textContent = this.timeFormat(0);
