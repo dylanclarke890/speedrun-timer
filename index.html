@@ -11,8 +11,19 @@
     <div id="segments"></div>
     <div id="run">
       <div id="run-info">
-        <div id="timer"></div>
-        <div id="currentSplit"></div>
+        <div class="active-segment">
+          <div class="active-segment-name"></div>
+          <div class="active-segment-current"></div>
+          <span>PB:</span>
+          <div class="active-segment-pb"></div>
+          <span>Best:</span>
+          <div class="active-segment-best"></div>
+          <div class="sum-of-best-container">
+            <span>Sum of best</span>
+            <div class="sum-of-best"></div>
+          </div>
+          <div id="timer"></div>
+        </div>
       </div>
       <div>
         <button id="timerStart" type="button">Start</button>

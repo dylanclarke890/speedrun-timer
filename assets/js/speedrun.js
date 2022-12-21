@@ -68,7 +68,17 @@ class SpeedRun {
 
     this.activeSegment++;
     this.currentSegmentTimeElapsed = 0;
+
     if (!this.hasNextSegment()) this.finish();
+    else {
+      const { name, current, best, pb } = this.elements.active;
+      const activeSegment = this.segments[this.activeSegment];
+
+      name.textContent = activeSegment.name;
+      best.textContent = this.timeFormat(activeSegment.bestDuration);
+      pb.textContent = ""; // TODO
+      current.textContent = this.timeFormat(0);
+    }
   }
 
   finish() {
@@ -90,7 +100,14 @@ class SpeedRun {
         split: document.getElementById("timerSplit"),
         save: document.getElementById("timerSave"),
       },
-      currentSegment: document.getElementById("currentSplit"),
+      active: {
+        container: document.querySelector(".active-segment"),
+        name: document.querySelector(".active-segment-name"),
+        current: document.querySelector(".active-segment-current"),
+        pb: document.querySelector(".active-segment-pb"),
+        best: document.querySelector(".active-segment-best"),
+      },
+      sumOfBest: document.querySelector(".sum-of-best"),
       total: document.getElementById("timer"),
     };
   }
@@ -130,7 +147,7 @@ class SpeedRun {
     this.totalTimeElapsed += elapsed;
     this.currentSegmentTimeElapsed += elapsed;
     this.elements.total.textContent = this.timeFormat(this.totalTimeElapsed);
-    this.elements.currentSegment.textContent = this.timeFormat(this.currentSegmentTimeElapsed);
+    this.elements.active.current.textContent = this.timeFormat(this.currentSegmentTimeElapsed);
   };
 
   #getTimer() {
@@ -153,11 +170,20 @@ class SpeedRun {
     this.#displaySegments();
     this.#assignTimerElements();
 
-    const { buttons, currentSegment, total } = this.elements;
+    const { buttons, active, total, sumOfBest } = this.elements;
     const { start, pause, reset, split, save } = buttons;
+    const { name, current, best, pb } = active;
+    const activeSegment = this.segments[0];
 
     total.textContent = this.timeFormat(0);
-    currentSegment.textContent = this.timeFormat(0);
+
+    name.textContent = activeSegment.name;
+    best.textContent = this.timeFormat(activeSegment.bestDuration);
+    pb.textContent = this.timeFormat(0); // TODO
+    current.textContent = this.timeFormat(0);
+    sumOfBest.textContent = this.timeFormat(
+      this.segments.map((v) => v.bestDuration ?? 0).reduce((a, b) => a + b)
+    );
 
     UI.addEvent(start, "click", () => this.start());
     UI.addEvent(pause, "click", () => this.pause());
