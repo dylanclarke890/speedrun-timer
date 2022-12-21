@@ -53,6 +53,7 @@ class SpeedRun {
     this.totalTimeElapsed = 0;
     this.currentSegmentTimeElapsed = 0;
     this.activeSegment = 0;
+    this.#updateActiveSegment();
     this.timer.reset();
   }
 
