@@ -7,7 +7,8 @@ class Segment {
     // TODO: add logic for skipping
     this.isSkipped = isSkipped;
     this.histories = histories;
-    this.timeFormat = (v) => Formatting.msToShortTimeString(Math.round(v));
+    this.timeFormat = (v) =>
+      Formatting.msToShortTimeString(Math.round(v), { fillEmptyWithZeroes: false });
   }
 
   initialHtml = (order) => {
@@ -293,8 +294,8 @@ UI.onPageReady(() => {
     }),
     new Segment({
       name: "Watch this *blows face off*",
-      endedAt: 183000,
-      bestDuration: 62000,
+      endedAt: 0,
+      bestDuration: 0,
     }),
   ];
 
