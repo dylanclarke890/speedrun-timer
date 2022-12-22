@@ -175,7 +175,7 @@ class SpeedRun {
   #updateSumOfBest() {
     const hasSegmentsWithoutBestTime = this.segments.some((v) => !v.bestDuration);
     this.elements.sumOfBest.textContent = hasSegmentsWithoutBestTime
-      ? ""
+      ? "-"
       : this.timeFormat(this.segments.map((v) => v.bestDuration).reduce((a, b) => a + b));
   }
 
