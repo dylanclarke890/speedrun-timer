@@ -14,7 +14,7 @@ class Segment {
   initialHtml = (order) => {
     return `
     <div class="segment" data-id="${this.id}">
-      <p class="segment-name">${this.name ?? order + 1}</p> 
+      <p class="segment-name">${this.name ?? `Segment ${order + 1}`}</p> 
       <p class="segment-time-saved"></p>
       <p class="segment-ended-at">${this.timeFormat(this.endedAt)}</p>
     </div>`;
@@ -316,6 +316,10 @@ UI.onPageReady(() => {
     }),
     new Segment({
       name: "Watch this *blows face off*",
+      endedAt: 0,
+      bestDuration: 0,
+    }),
+    new Segment({
       endedAt: 0,
       bestDuration: 0,
     }),

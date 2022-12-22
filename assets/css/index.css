@@ -32,7 +32,8 @@
   margin-bottom: 1rem;
 }
 
-.active-segment, .timer-container {
+.active-segment,
+.timer-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
