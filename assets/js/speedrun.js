@@ -2,8 +2,8 @@ class Segment {
   constructor({ id, name, endedAt, bestDuration, isSkipped = false, histories = [] } = {}) {
     this.id = id ?? UI.uniqueId();
     this.name = name;
-    this.endedAt = endedAt;
-    this.bestDuration = bestDuration;
+    this.endedAt = endedAt; // TODO: used for pb too?
+    this.bestDuration = bestDuration; // fastest time for section
     this.timeDifference = 0;
     // TODO: add logic for skipping
     this.isSkipped = isSkipped;
