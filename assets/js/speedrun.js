@@ -4,19 +4,18 @@ class Segment {
     this.name = name;
     this.endedAt = endedAt;
     this.bestDuration = bestDuration;
+    this.timeDifference = 0;
     // TODO: add logic for skipping
     this.isSkipped = isSkipped;
     this.histories = histories;
-    this.timeFormat = (v) =>
-      Formatting.msToShortTimeString(Math.round(v), { fillEmptyWithZeroes: false });
+    this.timeFormat = (v, opts) => Formatting.msToShortTimeString(Math.round(v), opts);
   }
 
   initialHtml = (order) => {
     return `
     <div class="segment" data-id="${this.id}">
       <p class="segment-name">${this.name ?? order + 1}</p> 
-      <p class="segment-total"></p> 
-      <p class="segment-current" style="display:none;"></p>
+      <p class="segment-time-saved"></p>
       <p class="segment-ended-at">${this.timeFormat(this.endedAt)}</p>
     </div>`;
   };
@@ -24,7 +23,17 @@ class Segment {
   updateHtml = () => {
     const element = document.querySelector(`[data-id=${this.id}]`);
     if (!element) throw new Error(`${this.id} is not a valid DOM selector.`);
-    element.querySelector(".segment-ended-at").innerHTML = this.timeFormat(this.endedAt);
+    element.querySelector(".segment-ended-at").innerHTML = this.timeFormat(this.endedAt, {
+      fillEmptyWithZeroes: false,
+    });
+
+    if (!this.timeDifference) return;
+    const timeSavedEl = element.querySelector(".segment-time-saved");
+    timeSavedEl.innerHTML = this.timeFormat(this.timeDifference, {
+      prefixSign: true,
+    });
+    timeSavedEl.classList.remove("green", "red");
+    timeSavedEl.classList.add(this.timeDifference < 0 ? "green" : "red");
   };
 }
 
@@ -35,6 +44,7 @@ class SpeedRun {
     this.activeSegment = 0;
     this.currentSegmentTimeElapsed = 0;
     this.totalTimeElapsed = 0;
+    this.totalTimeSaved = 0;
     this.timeFormat = (v) => Formatting.msToShortTimeString(Math.round(v));
     this.#setup();
     this.timer = this.#getTimer();
@@ -52,9 +62,14 @@ class SpeedRun {
 
   reset() {
     this.totalTimeElapsed = 0;
+    this.totalTimeSaved = 0;
     this.currentSegmentTimeElapsed = 0;
     this.activeSegment = 0;
     this.#updateActiveSegment();
+    for (let segment of this.segments) {
+      segment.timeDifference = 0;
+      segment.updateHtml();
+    }
     this.timer.reset();
   }
 
@@ -64,8 +79,15 @@ class SpeedRun {
 
     const current = this.segments[this.activeSegment];
     current.endedAt = this.totalTimeElapsed;
+
+    this.totalTimeSaved += current.bestDuration
+      ? this.currentSegmentTimeElapsed - current.bestDuration
+      : 0;
+    current.timeDifference = this.totalTimeSaved;
+
     if (!current.bestDuration || current.bestDuration > this.currentSegmentTimeElapsed)
       current.bestDuration = this.currentSegmentTimeElapsed;
+
     current.updateHtml();
 
     this.#updateSumOfBest();

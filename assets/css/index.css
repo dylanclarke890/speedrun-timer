@@ -7,8 +7,19 @@
 
 .segment {
   display: grid;
-  grid-template-columns: auto auto auto;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.segment .segment-name {
+  text-align: right;
+}
+
+.segment .segment-time-saved {
   text-align: center;
+}
+
+.segment .segment-ended-at {
+  text-align: left;
 }
 
 #run {
