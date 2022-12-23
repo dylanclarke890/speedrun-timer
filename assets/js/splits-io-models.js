@@ -1,6 +1,6 @@
 class SplitsIOModel {
   static from(data = {}) {
-    Object.assign(this, data);
+    return Object.assign(new this(), data);
   }
 }
 
@@ -33,7 +33,8 @@ class Game extends SplitsIOModel {
   cover_url;
 
   static from(data = {}) {
-    assignToThis = (key, value) => Object.defineProperty(this, key, { value });
+    const model = new Game();
+    assignToThis = (key, value) => Object.defineProperty(model, key, { value });
     Object.keys(data).forEach((key) => {
       switch (key) {
         case "categories":
@@ -47,6 +48,8 @@ class Game extends SplitsIOModel {
           break;
       }
     });
+
+    return model;
   }
 }
 
@@ -107,7 +110,8 @@ class Run extends SplitsIOModel {
   histories;
 
   static from(data = {}) {
-    assignToThis = (key, value) => Object.defineProperty(this, key, { value });
+    const model = new Run();
+    assignToThis = (key, value) => Object.defineProperty(model, key, { value });
     Object.keys(data).forEach((key) => {
       switch (key) {
         case "game":
@@ -139,5 +143,7 @@ class Run extends SplitsIOModel {
           break;
       }
     });
+
+    return model;
   }
 }
