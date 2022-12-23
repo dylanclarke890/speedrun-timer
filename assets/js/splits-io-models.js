@@ -1,4 +1,10 @@
-class Runner {
+class SplitsIOModel {
+  static from(data = {}) {
+    Object.assign(this, data);
+  }
+}
+
+class Runner extends SplitsIOModel {
   id;
   twitch_id;
   twitch_name;
@@ -9,14 +15,14 @@ class Runner {
   updated_at;
 }
 
-class Category {
+class Category extends SplitsIOModel {
   id;
   name;
   created_at;
   updated_at;
 }
 
-class Game {
+class Game extends SplitsIOModel {
   id;
   name;
   shortname;
@@ -25,9 +31,26 @@ class Game {
   categories;
   srdc_id;
   cover_url;
+
+  static from(data = {}) {
+    assignToThis = (key, value) => Object.defineProperty(this, key, { value });
+    Object.keys(data).forEach((key) => {
+      switch (key) {
+        case "categories":
+          assignToThis(
+            key,
+            data[key].map((categoryData) => Category.from(categoryData))
+          );
+          break;
+        default:
+          assignToThis(key, data[key]);
+          break;
+      }
+    });
+  }
 }
 
-class Segment {
+class Segment extends SplitsIOModel {
   id;
   name;
   display_name;
@@ -50,7 +73,7 @@ class Segment {
   gametime_reduced;
 }
 
-class History {
+class History extends SplitsIOModel {
   attempt_number;
   realtime_duration_ms;
   gametime_duration_ms;
@@ -58,7 +81,7 @@ class History {
   ended_at;
 }
 
-class Run {
+class Run extends SplitsIOModel {
   id;
   srdc_id;
 
@@ -82,4 +105,39 @@ class Run {
   runners;
   segments;
   histories;
+
+  static from(data = {}) {
+    assignToThis = (key, value) => Object.defineProperty(this, key, { value });
+    Object.keys(data).forEach((key) => {
+      switch (key) {
+        case "game":
+          assignToThis(key, Game.from(data[key]));
+          break;
+        case "category":
+          assignToThis(key, Category.from(data[key]));
+          break;
+        case "runners":
+          assignToThis(
+            key,
+            data[key].map((runnerData) => Category.from(runnerData))
+          );
+          break;
+        case "segments":
+          assignToThis(
+            key,
+            data[key].map((segmentData) => Segment.from(segmentData))
+          );
+          break;
+        case "histories":
+          assignToThis(
+            key,
+            data[key].map((historyData) => History.from(historyData))
+          );
+          break;
+        default:
+          assignToThis(key, data[key]);
+          break;
+      }
+    });
+  }
 }
