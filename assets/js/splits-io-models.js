@@ -32,7 +32,7 @@ class SplitsIOGame extends SplitsIOModel {
   srdc_id;
   cover_url;
 
-  static from(data = {}) {
+  static from(/** @type {SplitsIOGame || {}} */ data = {}) {
     const model = new SplitsIOGame();
     assignToThis = (key, value) => Object.defineProperty(model, key, { value });
     Object.keys(data).forEach((key) => {
@@ -109,7 +109,7 @@ class SplitsIORun extends SplitsIOModel {
   segments;
   histories;
 
-  static from(data = {}) {
+  static from(/** @type {SplitsIORun || {}} */ data = {}) {
     const model = new SplitsIORun();
     assignToThis = (key, value) => Object.defineProperty(model, key, { value });
     Object.keys(data).forEach((key) => {
