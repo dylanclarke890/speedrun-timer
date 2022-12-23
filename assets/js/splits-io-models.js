@@ -4,7 +4,7 @@ class SplitsIOModel {
   }
 }
 
-class Runner extends SplitsIOModel {
+class SplitsIORunner extends SplitsIOModel {
   id;
   twitch_id;
   twitch_name;
@@ -15,14 +15,14 @@ class Runner extends SplitsIOModel {
   updated_at;
 }
 
-class Category extends SplitsIOModel {
+class SplitsIOCategory extends SplitsIOModel {
   id;
   name;
   created_at;
   updated_at;
 }
 
-class Game extends SplitsIOModel {
+class SplitsIOGame extends SplitsIOModel {
   id;
   name;
   shortname;
@@ -33,14 +33,14 @@ class Game extends SplitsIOModel {
   cover_url;
 
   static from(data = {}) {
-    const model = new Game();
+    const model = new SplitsIOGame();
     assignToThis = (key, value) => Object.defineProperty(model, key, { value });
     Object.keys(data).forEach((key) => {
       switch (key) {
         case "categories":
           assignToThis(
             key,
-            data[key].map((categoryData) => Category.from(categoryData))
+            data[key].map((categoryData) => SplitsIOCategory.from(categoryData))
           );
           break;
         default:
@@ -53,7 +53,7 @@ class Game extends SplitsIOModel {
   }
 }
 
-class Segment extends SplitsIOModel {
+class SplitsIOSegment extends SplitsIOModel {
   id;
   name;
   display_name;
@@ -76,7 +76,7 @@ class Segment extends SplitsIOModel {
   gametime_reduced;
 }
 
-class History extends SplitsIOModel {
+class SplitsIOHistory extends SplitsIOModel {
   attempt_number;
   realtime_duration_ms;
   gametime_duration_ms;
@@ -84,7 +84,7 @@ class History extends SplitsIOModel {
   ended_at;
 }
 
-class Run extends SplitsIOModel {
+class SplitsIORun extends SplitsIOModel {
   id;
   srdc_id;
 
@@ -110,32 +110,32 @@ class Run extends SplitsIOModel {
   histories;
 
   static from(data = {}) {
-    const model = new Run();
+    const model = new SplitsIORun();
     assignToThis = (key, value) => Object.defineProperty(model, key, { value });
     Object.keys(data).forEach((key) => {
       switch (key) {
         case "game":
-          assignToThis(key, Game.from(data[key]));
+          assignToThis(key, SplitsIOGame.from(data[key]));
           break;
         case "category":
-          assignToThis(key, Category.from(data[key]));
+          assignToThis(key, SplitsIOCategory.from(data[key]));
           break;
         case "runners":
           assignToThis(
             key,
-            data[key].map((runnerData) => Category.from(runnerData))
+            data[key].map((runnerData) => SplitsIOCategory.from(runnerData))
           );
           break;
         case "segments":
           assignToThis(
             key,
-            data[key].map((segmentData) => Segment.from(segmentData))
+            data[key].map((segmentData) => SplitsIOSegment.from(segmentData))
           );
           break;
         case "histories":
           assignToThis(
             key,
-            data[key].map((historyData) => History.from(historyData))
+            data[key].map((historyData) => SplitsIOHistory.from(historyData))
           );
           break;
         default:
