@@ -2,9 +2,13 @@ class SplitsIOModel {
   static from(data = {}) {
     return Object.assign(new this(), data);
   }
+
+  static baseApiUrl = "https://splits.io/api/v4";
 }
 
 class SplitsIORunner extends SplitsIOModel {
+  static apiUrl = `${this.baseApiUrl}runners/`;
+
   id;
   twitch_id;
   twitch_name;
@@ -16,6 +20,8 @@ class SplitsIORunner extends SplitsIOModel {
 }
 
 class SplitsIOCategory extends SplitsIOModel {
+  static apiUrl = `${this.baseApiUrl}categories/`;
+
   id;
   name;
   created_at;
@@ -23,6 +29,8 @@ class SplitsIOCategory extends SplitsIOModel {
 }
 
 class SplitsIOGame extends SplitsIOModel {
+  static apiUrl = `${this.baseApiUrl}games/`;
+
   id;
   name;
   shortname;
@@ -54,6 +62,8 @@ class SplitsIOGame extends SplitsIOModel {
 }
 
 class SplitsIOSegment extends SplitsIOModel {
+  static apiUrl = `${this.baseApiUrl}segments/`;
+
   id;
   name;
   display_name;
@@ -85,6 +95,8 @@ class SplitsIOHistory extends SplitsIOModel {
 }
 
 class SplitsIORun extends SplitsIOModel {
+  static apiUrl = `${this.baseApiUrl}runs/`;
+
   id;
   srdc_id;
 
