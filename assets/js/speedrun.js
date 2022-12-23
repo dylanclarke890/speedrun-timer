@@ -303,6 +303,15 @@ class Timer {
 }
 
 UI.onPageReady(() => {
+  const testGetBtn = document.getElementById("testGet");
+  const url =
+    "https://socherry-webservices-com.stackstaging.com/speedrun-timer/get-example-run.php";
+  UI.addEvent(testGetBtn, "click", () => {
+    fetch(url, { method: "GET" })
+      .then((res) => res.text())
+      .then((data) => console.log(JSON.parse(data)));
+  });
+
   const segments = [
     new Segment({
       name: "Free Mia Cutscene",
