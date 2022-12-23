@@ -97,6 +97,7 @@ class SplitsIORun extends SplitsIOModel {
   default_timing;
   program;
   attempts;
+  uses_autosplitter;
   created_at;
   updated_at;
   parsed_at;
