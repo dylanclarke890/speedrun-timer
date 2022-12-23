@@ -309,7 +309,10 @@ UI.onPageReady(() => {
   UI.addEvent(testGetBtn, "click", () => {
     fetch(url, { method: "GET" })
       .then((res) => res.text())
-      .then((data) => console.log(JSON.parse(data)));
+      .then((data) => {
+        const splitsIORun = SplitsIORun.from(data);
+        console.log(splitsIORun);
+      });
   });
 
   const segments = [
