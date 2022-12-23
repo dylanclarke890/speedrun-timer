@@ -310,7 +310,9 @@ UI.onPageReady(() => {
     fetch(url, { method: "GET" })
       .then((res) => res.text())
       .then((data) => {
-        const splitsIORun = SplitsIORun.from(data);
+        data = JSON.parse(data);
+        data = JSON.parse(data); // needs two passes
+        const splitsIORun = SplitsIORun.from(data.run);
         console.log(splitsIORun);
       });
   });

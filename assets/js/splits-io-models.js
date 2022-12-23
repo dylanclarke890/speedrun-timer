@@ -34,7 +34,7 @@ class SplitsIOGame extends SplitsIOModel {
 
   static from(/** @type {SplitsIOGame || {}} */ data = {}) {
     const model = new SplitsIOGame();
-    assignToThis = (key, value) => Object.defineProperty(model, key, { value });
+    const assignToThis = (key, value) => Object.defineProperty(model, key, { value });
     Object.keys(data).forEach((key) => {
       switch (key) {
         case "categories":
@@ -111,7 +111,7 @@ class SplitsIORun extends SplitsIOModel {
 
   static from(/** @type {SplitsIORun || {}} */ data = {}) {
     const model = new SplitsIORun();
-    assignToThis = (key, value) => Object.defineProperty(model, key, { value });
+    const assignToThis = (key, value) => Object.defineProperty(model, key, { value });
     Object.keys(data).forEach((key) => {
       switch (key) {
         case "game":
