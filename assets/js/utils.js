@@ -226,6 +226,25 @@ class HttpClient {
     return undefined;
   }
 
+  setHeader(key, value) {
+    this.#headers[key] = value;
+    return this;
+  }
+
+  getHeader(key) {
+    return this.#headers[key];
+  }
+
+  setBasicAuth(username, password) {
+    this.#headers.Authorization = `Basic ${btoa(`${username}:${password}`)}`;
+    return this;
+  }
+
+  setBearerAuth(token) {
+    this.#headers.Authorization = `Bearer ${token}`;
+    return this;
+  }
+
   get(endpoint, opts = {}) {
     return this.#fetchJSON(endpoint, {
       ...opts,
