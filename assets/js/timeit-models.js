@@ -1,4 +1,4 @@
-class Segment {
+class TimeItSegment {
   constructor({ id, name, endedAt, bestDuration, isSkipped = false, histories = [] } = {}) {
     this.id = id ?? UI.uniqueId();
     this.name = name;
@@ -37,7 +37,7 @@ class Segment {
   };
 }
 
-class SpeedRun {
+class TimeItSpeedRun {
   constructor({ name, segments }) {
     this.name = name;
     this.segments = segments;
@@ -241,104 +241,3 @@ class SpeedRun {
     });
   }
 }
-
-class Timer {
-  static STATUSES = {
-    INITIALISED: 1,
-    RUNNING: 2,
-    PAUSED: 3,
-    STOPPED: 4,
-  };
-
-  constructor({ callbacks = { timeChanged: (_) => null, statusChanged: (_) => null } } = {}) {
-    this.lastRead = 0;
-    this.timeElapsed = 0;
-    this.callbacks = callbacks;
-    this.setStatus("INITIALISED");
-  }
-
-  setStatus = (status) => {
-    this.status = Timer.STATUSES[status];
-    this.callbacks.statusChanged(this.status);
-  };
-
-  isInStatus = (status) => this.status === Timer.STATUSES[status];
-
-  syncTimer() {
-    const now = performance.now();
-    const elapsed = now - this.lastRead;
-    this.lastRead = performance.now();
-    this.timeElapsed += elapsed;
-    this.callbacks.timeChanged(elapsed);
-  }
-
-  start() {
-    if (!this.isInStatus("INITIALISED") && !this.isInStatus("PAUSED")) return;
-    this.lastRead = performance.now();
-    this.interval = setInterval(() => this.syncTimer(), 100);
-    this.setStatus("RUNNING");
-  }
-
-  pause() {
-    if (!this.isInStatus("RUNNING")) return;
-    clearInterval(this.interval);
-    this.syncTimer();
-    this.setStatus("PAUSED");
-  }
-
-  reset() {
-    if (!this.isInStatus("PAUSED") && !this.isInStatus("STOPPED")) return;
-    this.lastRead = 0;
-    this.timeElapsed = 0;
-    this.callbacks.timeChanged(0);
-    this.setStatus("INITIALISED");
-  }
-
-  stop() {
-    if (this.isInStatus("INITIALISED")) return;
-    clearInterval(this.interval);
-    this.syncTimer();
-    this.setStatus("STOPPED");
-  }
-}
-
-UI.onPageReady(() => {
-  // const url =
-  //   "https://socherry-webservices-com.stackstaging.com/speedrun-timer/splits-io-request.php";
-
-  const client = new SplitsIOApiClient();
-
-  const testGetBtn = document.getElementById("testGet");
-  UI.addEvent(testGetBtn, "click", async () => {
-    const runData = await client.run.get("9okq");
-    const fetchedRun = SplitsIORun.from(runData.run);
-    console.log(fetchedRun);
-    const gameData = await client.game.get("re7");
-    const fetchedGame = SplitsIOGame.from(gameData.game);
-    console.log(fetchedGame);
-  });
-
-  const segments = [
-    new Segment({
-      name: "Free Mia Cutscene",
-      endedAt: 60000,
-      bestDuration: 60000,
-    }),
-    new Segment({
-      name: "Welcome to the family son",
-      endedAt: 121000,
-      bestDuration: 61000,
-    }),
-    new Segment({
-      name: "Watch this *blows face off*",
-      endedAt: 0,
-      bestDuration: 0,
-    }),
-    new Segment({
-      endedAt: 0,
-      bestDuration: 0,
-    }),
-  ];
-
-  window.run = new SpeedRun({ segments });
-});
