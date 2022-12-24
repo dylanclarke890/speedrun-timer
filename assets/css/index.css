@@ -38,3 +38,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
+
+/* TODO: REMOVE WHEN READY */
+#testGet {
+  position: absolute;
+  left: 50%;
+  top:40%
+}
