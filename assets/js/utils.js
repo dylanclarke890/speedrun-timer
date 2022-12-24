@@ -208,3 +208,15 @@ class Formatting {
     return `${prefixSign ? (isNegative ? "-" : "+") : ""} ${timeString}`;
   }
 }
+
+class HttpClient {
+  constructor(opts = {}) {
+    this.#baseUrl = opts.baseUrl || "";
+    this.#headers = opts.headers || {};
+  }
+
+  setHeader(key, value) {
+    this.#headers[key] = value;
+    return this;
+  }
+}

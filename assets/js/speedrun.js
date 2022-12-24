@@ -37,6 +37,12 @@ class Segment {
   };
 }
 
+const RUN_SOURCE = {
+  SPLITS_IO: "splitsio",
+  SRDC: "srdc",
+  INTERNAL: "internal",
+};
+
 class SpeedRun {
   constructor({ name, segments }) {
     this.name = name;
@@ -308,9 +314,8 @@ UI.onPageReady(() => {
     "https://socherry-webservices-com.stackstaging.com/speedrun-timer/splits-io-request.php";
   UI.addEvent(testGetBtn, "click", () => {
     fetch(url, { method: "GET" })
-      .then((res) => res.text())
+      .then((res) => res.json())
       .then((data) => {
-        data = JSON.parse(data);
         const splitsIORun = SplitsIORun.from(data.run);
         console.log(splitsIORun);
       });
