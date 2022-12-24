@@ -215,8 +215,54 @@ class HttpClient {
     this.#headers = opts.headers || {};
   }
 
-  setHeader(key, value) {
-    this.#headers[key] = value;
-    return this;
+  async #fetchJSON(endpoint, opts = {}) {
+    const res = await fetch(this.#baseURL + endpoint, {
+      ...opts,
+      headers: this.#headers,
+    });
+
+    if (!res.ok) throw new Error(res.statusText);
+    if (opts.parseResponse !== false && res.status !== 204) return res.json();
+    return undefined;
+  }
+
+  get(endpoint, opts = {}) {
+    return this.#fetchJSON(endpoint, {
+      ...opts,
+      method: "GET",
+    });
+  }
+
+  post(endpoint, body, opts = {}) {
+    return this.#fetchJSON(endpoint, {
+      ...opts,
+      body: body ? JSON.stringify(body) : undefined,
+      method: "POST",
+    });
+  }
+
+  put(endpoint, body, opts = {}) {
+    return this.#fetchJSON(endpoint, {
+      ...opts,
+      body: body ? JSON.stringify(body) : undefined,
+      method: "PUT",
+    });
+  }
+
+  patch(endpoint, operations, opts = {}) {
+    return this.#fetchJSON(endpoint, {
+      parseResponse: false,
+      ...opts,
+      body: JSON.stringify(operations),
+      method: "PATCH",
+    });
+  }
+
+  delete(endpoint, opts = {}) {
+    return this.#fetchJSON(endpoint, {
+      parseResponse: false,
+      ...opts,
+      method: "DELETE",
+    });
   }
 }
