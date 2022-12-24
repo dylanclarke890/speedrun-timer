@@ -285,3 +285,24 @@ class HttpClient {
     });
   }
 }
+
+class ApiClient extends HttpClient {
+  constructor(baseURL, langCode) {
+    super({
+      baseURL,
+      headers: {
+        lang: langCode,
+      },
+    });
+  }
+
+  // example
+  get users() {
+    return {
+      get: () => this.get("/users"),
+      delete: (id) => this.delete(`/users/${id}`),
+      create: (user) => this.post("/users", user),
+      update: (user) => this.put(`/users/${user.id}`, user),
+    };
+  }
+}
