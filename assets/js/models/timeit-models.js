@@ -50,6 +50,11 @@ class TimeItSpeedRun {
     this.timer = this.#getTimer();
   }
 
+  // FIXME
+  static from(_ = {}) {
+    throw new Error("NOT IMPLEMENTED!");
+  }
+
   hasNextSegment = () => this.activeSegment < this.segments.length;
 
   start() {
