@@ -309,16 +309,16 @@ class Timer {
 }
 
 UI.onPageReady(() => {
+  // const url =
+  //   "https://socherry-webservices-com.stackstaging.com/speedrun-timer/splits-io-request.php";
+
+  const client = new SplitsIOApiClient();
+
   const testGetBtn = document.getElementById("testGet");
-  const url =
-    "https://socherry-webservices-com.stackstaging.com/speedrun-timer/splits-io-request.php";
-  UI.addEvent(testGetBtn, "click", () => {
-    fetch(url, { method: "GET" })
-      .then((res) => res.json())
-      .then((data) => {
-        const splitsIORun = SplitsIORun.from(data.run);
-        console.log(splitsIORun);
-      });
+  UI.addEvent(testGetBtn, "click", async () => {
+    const response = await client.runs.get("9okq");
+    const fetchedRun = SplitsIORun.from(response.run);
+    console.log(fetchedRun);
   });
 
   const segments = [

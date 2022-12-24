@@ -291,6 +291,18 @@ class HttpClient {
   }
 }
 
+class SplitsIOApiClient extends HttpClient {
+  constructor() {
+    super({ baseUrl: "https://splits.io/api/v4/", headers: { Accept: "application/json" } });
+  }
+
+  get runs() {
+    return {
+      get: (id, historic = false) => this.get(`/runs/${id}${historic ? "?historic=1" : ""}`),
+    };
+  }
+}
+
 class ApiClient extends HttpClient {
   constructor(baseUrl, langCode) {
     super({
