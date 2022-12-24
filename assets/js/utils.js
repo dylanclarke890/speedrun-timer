@@ -327,25 +327,13 @@ class SplitsIOApiClient extends HttpClient {
       search: (srdcShortname) => this.get(`${games}?search=${srdcShortname}`),
     };
   }
-}
 
-class ApiClient extends HttpClient {
-  constructor(baseUrl, langCode) {
-    super({
-      baseUrl,
-      headers: {
-        lang: langCode,
-      },
-    });
-  }
-
-  // example
-  get users() {
+  get category() {
+    const categories = "/categories";
     return {
-      get: () => this.get("/users"),
-      delete: (id) => this.delete(`/users/${id}`),
-      create: (user) => this.post("/users", user),
-      update: (user) => this.put(`/users/${user.id}`, user),
+      get: (id) => this.get(`${categories}/${id}`),
+      getRuns: (id) => this.get(`${categories}/${id}/runs`),
+      getRunners: (id) => this.get(`${categories}/${id}/runners`),
     };
   }
 }
