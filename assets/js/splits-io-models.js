@@ -1,14 +1,18 @@
+const DEFAULT_TIMING = {
+  GAME: "game",
+  REAL: "real",
+};
+
 class SplitsIOModel {
+  static baseApiUrl = "https://splits.io/api/v4";
+
   static from(data = {}) {
     return Object.assign(new this(), data);
   }
-
-  static baseApiUrl = "https://splits.io/api/v4";
 }
 
 class SplitsIORunner extends SplitsIOModel {
   static apiUrl = `${this.baseApiUrl}runners/`;
-
   id;
   twitch_id;
   twitch_name;
@@ -21,7 +25,6 @@ class SplitsIORunner extends SplitsIOModel {
 
 class SplitsIOCategory extends SplitsIOModel {
   static apiUrl = `${this.baseApiUrl}categories/`;
-
   id;
   name;
   created_at;
@@ -30,7 +33,6 @@ class SplitsIOCategory extends SplitsIOModel {
 
 class SplitsIOGame extends SplitsIOModel {
   static apiUrl = `${this.baseApiUrl}games/`;
-
   id;
   name;
   shortname;
@@ -63,12 +65,10 @@ class SplitsIOGame extends SplitsIOModel {
 
 class SplitsIOSegment extends SplitsIOModel {
   static apiUrl = `${this.baseApiUrl}segments/`;
-
   id;
   name;
   display_name;
   segment_number;
-
   realtime_start_ms;
   realtime_duration_ms;
   realtime_end_ms;
@@ -76,7 +76,6 @@ class SplitsIOSegment extends SplitsIOModel {
   realtime_gold;
   realtime_skipped;
   realtime_reduced;
-
   gametime_start_ms;
   gametime_duration_ms;
   gametime_end_ms;
@@ -96,16 +95,12 @@ class SplitsIOHistory extends SplitsIOModel {
 
 class SplitsIORun extends SplitsIOModel {
   static apiUrl = `${this.baseApiUrl}runs/`;
-
   id;
   srdc_id;
-
   realtime_duration_ms;
   realtime_sum_of_best_ms;
-
   gametime_duration_ms;
   gametime_sum_of_best_ms;
-
   default_timing;
   program;
   attempts;
@@ -115,7 +110,6 @@ class SplitsIORun extends SplitsIOModel {
   parsed_at;
   image_url;
   video_url;
-
   game;
   category;
   runners;
@@ -136,7 +130,7 @@ class SplitsIORun extends SplitsIOModel {
         case "runners":
           assignToThis(
             key,
-            data[key].map((runnerData) => SplitsIOCategory.from(runnerData))
+            data[key].map((runnerData) => SplitsIORunner.from(runnerData))
           );
           break;
         case "segments":

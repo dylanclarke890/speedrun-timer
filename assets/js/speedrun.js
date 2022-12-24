@@ -305,7 +305,7 @@ class Timer {
 UI.onPageReady(() => {
   const testGetBtn = document.getElementById("testGet");
   const url =
-    "https://socherry-webservices-com.stackstaging.com/speedrun-timer/get-example-run.php";
+    "https://socherry-webservices-com.stackstaging.com/speedrun-timer/splits-io-request.php";
   UI.addEvent(testGetBtn, "click", () => {
     fetch(url, { method: "GET" })
       .then((res) => res.text())
