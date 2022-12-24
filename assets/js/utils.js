@@ -297,8 +297,9 @@ class SplitsIOApiClient extends HttpClient {
   }
 
   get run() {
+    const runs = "/runs";
     return {
-      get: (id, historic = false) => this.get(`/runs/${id}${historic ? "?historic=1" : ""}`),
+      get: (id, historic = false) => this.get(`${runs}/${id}${historic ? "?historic=1" : ""}`),
     };
   }
 
@@ -306,12 +307,24 @@ class SplitsIOApiClient extends HttpClient {
     const runners = "/runners";
     return {
       get: (username) => this.get(`${runners}/${username}`),
+      getCurrent: () => this.get(`/runner`), // TODO: Add OAuth so this works.
       getRuns: (username) => this.get(`${runners}/${username}/runs`),
       getPbs: (username) => this.get(`${runners}/${username}/pbs`),
       getGames: (username) => this.get(`${runners}/${username}/games`),
       getCategories: (username) => this.get(`${runners}/${username}/categories`),
       search: (username) => this.get(`${runners}?search=${username}`),
-      getCurrent: () => this.get(`/runner`), // TODO: Add OAuth so this works.
+    };
+  }
+
+  get game() {
+    const games = "/games";
+    return {
+      get: (srdcShortname) => this.get(`${games}/${srdcShortname}`),
+      getRuns: (srdcShortname) => this.get(`${games}/${srdcShortname}/runs`),
+      getRunners: (srdcShortname) => this.get(`${games}/${srdcShortname}/runners`),
+      getCategories: (srdcShortname, onlyNonEmpty = false) =>
+        this.get(`${games}/${srdcShortname}/categories${onlyNonEmpty ? "?filter=nonempty" : ""}`),
+      search: (srdcShortname) => this.get(`${games}?search=${srdcShortname}`),
     };
   }
 }
