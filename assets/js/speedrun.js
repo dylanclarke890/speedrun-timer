@@ -37,12 +37,6 @@ class Segment {
   };
 }
 
-const RUN_SOURCE = {
-  SPLITS_IO: "splitsio",
-  SRDC: "srdc",
-  INTERNAL: "internal",
-};
-
 class SpeedRun {
   constructor({ name, segments }) {
     this.name = name;
