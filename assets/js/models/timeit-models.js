@@ -1,4 +1,13 @@
-class TimeItSegment {
+//#region TimeIt
+
+class TimeItModel {
+  static from(data = {}) {
+    if (data instanceof SplitsIOModel) {
+    }
+  }
+}
+
+class TimeItSegment extends TimeItModel {
   constructor({ id, name, endedAt, bestDuration, isSkipped = false, histories = [] } = {}) {
     this.id = id ?? UI.uniqueId();
     this.name = name;
@@ -37,7 +46,7 @@ class TimeItSegment {
   };
 }
 
-class TimeItSpeedRun {
+class TimeItSpeedRun extends TimeItModel {
   constructor({ name, segments }) {
     this.name = name;
     this.segments = segments;
@@ -246,3 +255,5 @@ class TimeItSpeedRun {
     });
   }
 }
+
+//#endregion TimeIt
