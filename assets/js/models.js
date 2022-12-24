@@ -78,14 +78,14 @@ class TimeItSpeedRun extends TimeItModel {
   }
 
   static from(/** @type {Object} */ data = {}) {
-    const model = new TimeItSpeedRun();
-    if (data instanceof SplitsIORun) {
-      model.id = data.id;
-      model.name = data.name;
-      model.segments = data.segments.map((s) => TimeItSegment.from(s));
-    } else Object.assign(model, data);
+    return data instanceof SplitsIORun
+      ? new TimeItSpeedRun({
+          id: data.id,
+          name: data.name,
+          segments: data.segments.map((s) => TimeItSegment.from(s)),
+        })
+      : Object.assign(new this(), data);
 
-    return model;
   }
 
   hasNextSegment = () => this.activeSegment < this.segments.length;
