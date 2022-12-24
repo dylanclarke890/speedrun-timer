@@ -210,13 +210,18 @@ class Formatting {
 }
 
 class HttpClient {
+  /** @type {string} */
+  #baseUrl;
+  /** @type {Array<string>} */
+  #headers;
+
   constructor(opts = {}) {
     this.#baseUrl = opts.baseUrl || "";
     this.#headers = opts.headers || {};
   }
 
   async #fetchJSON(endpoint, opts = {}) {
-    const res = await fetch(this.#baseURL + endpoint, {
+    const res = await fetch(this.#baseUrl + endpoint, {
       ...opts,
       headers: this.#headers,
     });
@@ -287,9 +292,9 @@ class HttpClient {
 }
 
 class ApiClient extends HttpClient {
-  constructor(baseURL, langCode) {
+  constructor(baseUrl, langCode) {
     super({
-      baseURL,
+      baseUrl,
       headers: {
         lang: langCode,
       },
