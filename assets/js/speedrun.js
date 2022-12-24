@@ -316,7 +316,7 @@ UI.onPageReady(() => {
 
   const testGetBtn = document.getElementById("testGet");
   UI.addEvent(testGetBtn, "click", async () => {
-    const response = await client.runs.get("9okq");
+    const response = await client.run.get("9okq");
     const fetchedRun = SplitsIORun.from(response.run);
     console.log(fetchedRun);
   });

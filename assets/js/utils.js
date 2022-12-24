@@ -296,9 +296,22 @@ class SplitsIOApiClient extends HttpClient {
     super({ baseUrl: "https://splits.io/api/v4/", headers: { Accept: "application/json" } });
   }
 
-  get runs() {
+  get run() {
     return {
       get: (id, historic = false) => this.get(`/runs/${id}${historic ? "?historic=1" : ""}`),
+    };
+  }
+
+  get runner() {
+    const runners = "/runners";
+    return {
+      get: (username) => this.get(`${runners}/${username}`),
+      getRuns: (username) => this.get(`${runners}/${username}/runs`),
+      getPbs: (username) => this.get(`${runners}/${username}/pbs`),
+      getGames: (username) => this.get(`${runners}/${username}/games`),
+      getCategories: (username) => this.get(`${runners}/${username}/categories`),
+      search: (username) => this.get(`${runners}?search=${username}`),
+      getCurrent: () => this.get(`/runner`), // TODO: Add OAuth so this works.
     };
   }
 }
