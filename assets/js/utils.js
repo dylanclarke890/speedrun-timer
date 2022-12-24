@@ -292,8 +292,8 @@ class HttpClient {
 }
 
 class SplitsIOApiClient extends HttpClient {
-  constructor() {
-    super({ baseUrl: "https://splits.io/api/v4/", headers: { Accept: "application/json" } });
+  constructor(returnFormat = "application/json") {
+    super({ baseUrl: "https://splits.io/api/v4/", headers: { Accept: returnFormat } });
   }
 
   get run() {
