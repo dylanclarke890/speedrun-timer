@@ -15,14 +15,15 @@ class TimeItHistory extends TimeItModel {}
 class TimeItRunner extends TimeItModel {}
 
 class TimeItSegment extends TimeItModel {
-  constructor({ id, name, endedAt, bestDuration, isSkipped = false } = {}) {
+  constructor({ id, name, endedAt, bestDuration, timeTakenDuringPb, isSkipped = false } = {}) {
     super();
     this.id = id ?? UI.uniqueId();
     this.name = name;
     this.endedAt = endedAt; // TODO: used for pb too?
     this.bestDuration = bestDuration; // fastest time for section
-    this.timeDifference = 0;
+    this.timeTakenDuringPb = timeTakenDuringPb;
     this.isSkipped = isSkipped;
+    this.timeDifference = 0;
     this.timeFormat = (v, opts) => Formatting.msToShortTimeString(Math.round(v), opts);
   }
 
@@ -52,16 +53,19 @@ class TimeItSegment extends TimeItModel {
   };
 
   static from(data = {}, timingMethod = DEFAULT_TIMING.REAL) {
+    console.log(data);
     let model;
     if (data instanceof SplitsIOSegment) {
       model = new TimeItSegment({ id: data.id, name: data.name });
       if (timingMethod === DEFAULT_TIMING.REAL) {
         model.endedAt = data.realtime_end_ms;
         model.bestDuration = data.realtime_shortest_duration_ms;
+        model.timeTakenDuringPb = data.realtime_duration_ms;
         model.isSkipped = data.realtime_skipped;
       } else if (timingMethod === DEFAULT_TIMING.GAME) {
         model.endedAt = data.gametime_end_ms;
         model.bestDuration = data.gametime_shortest_duration_ms;
+        model.timeTakenDuringPb = data.gametime_duration_ms;
         model.isSkipped = data.gametime_skipped;
       }
     } else model = Object.assign(new this(), data);
@@ -235,7 +239,7 @@ class TimeItSpeedRun extends TimeItModel {
     const activeSegment = this.segments[this.activeSegment];
     name.textContent = activeSegment.name;
     best.textContent = this.timeFormat(activeSegment.bestDuration);
-    pb.textContent = this.timeFormat(0); // TODO
+    pb.textContent = this.timeFormat(activeSegment.timeTakenDuringPb);
     current.textContent = this.timeFormat(0);
   }
 
