@@ -15,16 +15,14 @@ class TimeItHistory extends TimeItModel {}
 class TimeItRunner extends TimeItModel {}
 
 class TimeItSegment extends TimeItModel {
-  constructor({ id, name, endedAt, bestDuration, isSkipped = false, histories = [] } = {}) {
+  constructor({ id, name, endedAt, bestDuration, isSkipped = false } = {}) {
     super();
     this.id = id ?? UI.uniqueId();
     this.name = name;
     this.endedAt = endedAt; // TODO: used for pb too?
     this.bestDuration = bestDuration; // fastest time for section
     this.timeDifference = 0;
-    // TODO: add logic for skipping
     this.isSkipped = isSkipped;
-    this.histories = histories;
     this.timeFormat = (v, opts) => Formatting.msToShortTimeString(Math.round(v), opts);
   }
 
@@ -38,7 +36,7 @@ class TimeItSegment extends TimeItModel {
   };
 
   updateHtml = () => {
-    const element = document.querySelector(`[data-id=${this.id}]`);
+    const element = document.querySelector(`[data-id="${this.id}"]`);
     if (!element) throw new Error(`${this.id} is not a valid DOM selector.`);
     element.querySelector(".segment-ended-at").innerHTML = this.timeFormat(this.endedAt, {
       fillEmptyWithZeroes: false,
@@ -53,10 +51,20 @@ class TimeItSegment extends TimeItModel {
     timeSavedEl.classList.add(this.timeDifference < 0 ? "green" : "red");
   };
 
-  static from(data = {}) {
-    const model = new TimeItSegment();
+  static from(data = {}, timingMethod = DEFAULT_TIMING.REAL) {
+    let model;
     if (data instanceof SplitsIOSegment) {
-    } else Object.assign(model, data);
+      model = new TimeItSegment({ id: data.id, name: data.name });
+      if (timingMethod === DEFAULT_TIMING.REAL) {
+        model.endedAt = data.realtime_end_ms;
+        model.bestDuration = data.realtime_shortest_duration_ms;
+        model.isSkipped = data.realtime_skipped;
+      } else if (timingMethod === DEFAULT_TIMING.GAME) {
+        model.endedAt = data.gametime_end_ms;
+        model.bestDuration = data.gametime_shortest_duration_ms;
+        model.isSkipped = data.gametime_skipped;
+      }
+    } else model = Object.assign(new this(), data);
 
     return model;
   }
@@ -82,10 +90,11 @@ class TimeItSpeedRun extends TimeItModel {
       ? new TimeItSpeedRun({
           id: data.id,
           name: data.name,
-          segments: data.segments.map((s) => TimeItSegment.from(s)),
+          segments: data.segments.map((s) =>
+            TimeItSegment.from(s, DEFAULT_TIMING[data.default_timing.toUpperCase()])
+          ),
         })
       : Object.assign(new this(), data);
-
   }
 
   hasNextSegment = () => this.activeSegment < this.segments.length;
@@ -117,7 +126,6 @@ class TimeItSpeedRun extends TimeItModel {
 
     const current = this.segments[this.activeSegment];
     current.endedAt = this.totalTimeElapsed;
-
     this.totalTimeSaved += current.bestDuration
       ? this.currentSegmentTimeElapsed - current.bestDuration
       : 0;
@@ -225,7 +233,6 @@ class TimeItSpeedRun extends TimeItModel {
   #updateActiveSegment() {
     const { name, current, best, pb } = this.elements.active;
     const activeSegment = this.segments[this.activeSegment];
-
     name.textContent = activeSegment.name;
     best.textContent = this.timeFormat(activeSegment.bestDuration);
     pb.textContent = this.timeFormat(0); // TODO
